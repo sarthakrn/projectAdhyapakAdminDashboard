@@ -1,0 +1,103 @@
+import React, { useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { useApp } from '../../context/AppContext';
+import './ClassDashboard.css';
+
+const ClassDashboard = () => {
+  const { classNumber } = useParams();
+  const { updateBreadcrumbs, selectClass } = useApp();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (classNumber) {
+      selectClass(classNumber);
+      updateBreadcrumbs([`Class ${classNumber}`]);
+    }
+  }, [classNumber, updateBreadcrumbs, selectClass]);
+
+  const modules = [
+    {
+      id: 'student-registration',
+      title: 'Student Registration Form',
+      description: 'Manage student data with advanced validation and bulk operations',
+      icon: '👥',
+      path: `/dashboard/${classNumber}/student-registration`,
+      color: 'rgba(0, 123, 255, 0.8)'
+    },
+    {
+      id: 'academics',
+      title: 'Academics',
+      description: 'Access subjects, syllabus, assignments, and academic materials',
+      icon: '📚',
+      path: `/dashboard/${classNumber}/academics`,
+      color: 'rgba(40, 167, 69, 0.8)'
+    },
+    {
+      id: 'notifications',
+      title: 'Notification',
+      description: 'View and manage important announcements and updates',
+      icon: '🔔',
+      path: `/dashboard/${classNumber}/notifications`,
+      color: 'rgba(253, 126, 20, 0.8)'
+    },
+    {
+      id: 'holiday-calendar',
+      title: 'Holiday Calendar',
+      description: 'Check upcoming holidays and important dates',
+      icon: '📅',
+      path: `/dashboard/${classNumber}/holiday-calendar`,
+      color: 'rgba(220, 53, 69, 0.8)'
+    },
+    {
+      id: 'competency-model',
+      title: "School's Competency Model",
+      description: 'Explore competency frameworks and assessment criteria',
+      icon: '🏆',
+      path: `/dashboard/${classNumber}/competency-model`,
+      color: 'rgba(111, 66, 193, 0.8)'
+    }
+  ];
+
+  const handleModuleClick = (module) => {
+    try {
+      navigate(module.path);
+    } catch (error) {
+      console.error('Navigation error:', error);
+    }
+  };
+
+  return (
+    <div className="class-dashboard-container">
+      <div className="dashboard-header">
+        <h1 className="dashboard-title">Class {classNumber} Dashboard</h1>
+        <p className="dashboard-subtitle">
+          Welcome to your class management hub. Select a module to get started.
+        </p>
+      </div>
+
+      <div className="modules-grid">
+        {modules.map((module, index) => (
+          <button
+            key={module.id}
+            className="module-card"
+            onClick={() => handleModuleClick(module)}
+            style={{
+              '--module-color': module.color,
+              '--animation-delay': `${index * 0.1}s`
+            }}
+            type="button"
+          >
+            <div className="module-icon">{module.icon}</div>
+            <div className="module-content">
+              <h3 className="module-title">{module.title}</h3>
+              <p className="module-description">{module.description}</p>
+            </div>
+            <div className="module-arrow">→</div>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+export default ClassDashboard;
