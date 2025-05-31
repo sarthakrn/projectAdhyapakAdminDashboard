@@ -1,0 +1,142 @@
+.sub-module-container {
+  width: 100%;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  padding: 20px;
+}
+
+.sub-module-header {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  padding: 32px;
+  margin-bottom: 24px;
+  border: 1px solid #e2e8f0;
+}
+
+.sub-module-header-content {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.sub-module-icon-large {
+  width: 80px;
+  height: 80px;
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 36px;
+  color: white;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+  flex-shrink: 0;
+}
+
+.sub-module-header-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.sub-module-title {
+  margin: 0 0 8px 0;
+  font-size: 32px;
+  font-weight: 700;
+  color: #1a202c;
+  line-height: 1.2;
+}
+
+.sub-module-subtitle {
+  margin: 0 0 12px 0;
+  font-size: 18px;
+  font-weight: 500;
+  color: #4a5568;
+  opacity: 0.8;
+}
+
+.sub-module-description {
+  margin: 0;
+  font-size: 16px;
+  color: #718096;
+  line-height: 1.5;
+}
+
+.sub-module-content {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 768px) {
+  .sub-module-container {
+    padding: 16px;
+  }
+  
+  .sub-module-header {
+    padding: 24px 20px;
+    margin-bottom: 20px;
+  }
+  
+  .sub-module-header-content {
+    flex-direction: column;
+    text-align: center;
+    gap: 20px;
+  }
+  
+  .sub-module-icon-large {
+    width: 64px;
+    height: 64px;
+    font-size: 28px;
+  }
+  
+  .sub-module-title {
+    font-size: 24px;
+  }
+  
+  .sub-module-subtitle {
+    font-size: 16px;
+  }
+  
+  .sub-module-description {
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .sub-module-container {
+    padding: 12px;
+  }
+  
+  .sub-module-header {
+    padding: 20px 16px;
+    border-radius: 12px;
+  }
+  
+  .sub-module-icon-large {
+    width: 56px;
+    height: 56px;
+    font-size: 24px;
+    border-radius: 14px;
+  }
+  
+  .sub-module-title {
+    font-size: 20px;
+  }
+  
+  .sub-module-subtitle {
+    font-size: 14px;
+  }
+  
+  .sub-module-description {
+    font-size: 13px;
+  }
+}

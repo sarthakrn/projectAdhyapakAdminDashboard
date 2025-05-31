@@ -4,7 +4,7 @@ import { useApp } from '../../context/AppContext';
 import './Breadcrumb.css';
 
 const Breadcrumb = () => {
-  const { breadcrumbs, navigateToBreadcrumb, selectedClass } = useApp();
+  const { breadcrumbs, navigateToBreadcrumb } = useApp();
   const navigate = useNavigate();
 
   const handleBreadcrumbClick = (index) => {
@@ -12,40 +12,57 @@ const Breadcrumb = () => {
     navigateToBreadcrumb(index);
     
     // Navigate based on breadcrumb level
-    if (index === 0 && selectedClass) {
-      // Navigate to class dashboard
-      navigate(`/dashboard/${selectedClass}`);
-    } else if (index === 1 && breadcrumbs[1] && selectedClass) {
-      // Navigate to module page - handle specific module mappings
-      const moduleName = breadcrumbs[1];
-      let moduleRoute = '';
-      
-      switch (moduleName) {
-        case 'Student Registration':
-          moduleRoute = 'student-registration';
-          break;
-        case 'Academics':
-          moduleRoute = 'academics';
-          break;
-        case 'Notification':
-          moduleRoute = 'notifications';
-          break;
-        case 'Holiday Calendar':
-          moduleRoute = 'holiday-calendar';
-          break;
-        case "School's Competency Model":
-          moduleRoute = 'competency-model';
-          break;
-        default:
-          // Fallback to lowercase with dashes
-          moduleRoute = moduleName.toLowerCase().replace(/\s+/g, '-').replace(/'/g, '');
+    if (index === 0) {
+      // Navigate to class selector page
+      navigate('/class-selector');
+    } else if (index === 1 && breadcrumbs[1]) {
+      // Extract class number from breadcrumb (e.g., "Class9" -> "class-9")
+      const classBreadcrumb = breadcrumbs[1];
+      if (classBreadcrumb.startsWith('Class')) {
+        const classNum = classBreadcrumb.replace('Class', '');
+        navigate(`/class-selector/class-${classNum}`);
       }
+    } else if (index === 2 && breadcrumbs[2]) {
+      // Navigate to module page - handle specific module mappings
+      const classBreadcrumb = breadcrumbs[1];
+      const moduleName = breadcrumbs[2];
       
-      navigate(`/dashboard/${selectedClass}/${moduleRoute}`);
-    } else if (index === 2 && breadcrumbs[2] && selectedClass) {
+      if (classBreadcrumb && classBreadcrumb.startsWith('Class')) {
+        const classNum = classBreadcrumb.replace('Class', '');
+        let moduleRoute = '';
+        
+        switch (moduleName) {
+          case 'Student Registration':
+            moduleRoute = 'student-registration';
+            break;
+          case 'Academics':
+            moduleRoute = 'academics';
+            break;
+          case 'Notification':
+            moduleRoute = 'notifications';
+            break;
+          case 'Holiday Calendar':
+            moduleRoute = 'holiday-calendar';
+            break;
+          case "School's Competency Model":
+            moduleRoute = 'competency-model';
+            break;
+          default:
+            // Fallback to lowercase with dashes
+            moduleRoute = moduleName.toLowerCase().replace(/\s+/g, '-').replace(/'/g, '');
+        }
+        
+        navigate(`/class-selector/class-${classNum}/${moduleRoute}`);
+      }
+    } else if (index === 3 && breadcrumbs[3]) {
       // Navigate to subject page for academics
-      const subjectName = breadcrumbs[2].toLowerCase().replace(/\s+/g, '-');
-      navigate(`/dashboard/${selectedClass}/academics/${subjectName}`);
+      const classBreadcrumb = breadcrumbs[1];
+      const subjectName = breadcrumbs[3].toLowerCase().replace(/\s+/g, '-');
+      
+      if (classBreadcrumb && classBreadcrumb.startsWith('Class')) {
+        const classNum = classBreadcrumb.replace('Class', '');
+        navigate(`/class-selector/class-${classNum}/academics/${subjectName}`);
+      }
     }
   };
 

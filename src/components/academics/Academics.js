@@ -9,7 +9,8 @@ const Academics = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    updateBreadcrumbs([`Class ${classNumber}`, 'Academics']);
+    const cleanClassNumber = classNumber.replace('class-', '');
+    updateBreadcrumbs(['Class Selector', `Class${cleanClassNumber}`, 'Academics']);
   }, [classNumber, updateBreadcrumbs]);
 
   const subjects = [
@@ -51,13 +52,13 @@ const Academics = () => {
   ];
 
   const handleSubjectClick = (subject) => {
-    navigate(`/dashboard/${classNumber}/academics/${subject.id}`);
+    navigate(`/class-selector/${classNumber}/academics/${subject.id}`);
   };
 
   return (
     <div className="academics-container">
       <div className="academics-header">
-        <h1 className="academics-title">Class {classNumber} - Academics</h1>
+        <h1 className="academics-title">Class{classNumber.replace('class-', '')} - Academics</h1>
         <p className="academics-subtitle">
           Select a subject to access syllabus, materials, assignments, and more
         </p>

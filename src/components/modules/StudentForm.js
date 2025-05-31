@@ -13,7 +13,8 @@ const StudentForm = () => {
   };
 
   useEffect(() => {
-    updateBreadcrumbs([`Class ${classNumber}`, 'Student Registration']);
+    const cleanClassNumber = classNumber.replace('class-', '');
+    updateBreadcrumbs(['Class Selector', `Class${cleanClassNumber}`, 'Student Registration']);
   }, [classNumber, updateBreadcrumbs]);
 
   const [students, setStudents] = useState([

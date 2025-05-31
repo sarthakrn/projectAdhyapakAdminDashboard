@@ -13,7 +13,8 @@ const Subject = () => {
       .split('-')
       .map(word => word.charAt(0).toUpperCase() + word.slice(1))
       .join(' ');
-    updateBreadcrumbs([`Class ${classNumber}`, 'Academics', subjectName]);
+    const cleanClassNumber = classNumber.replace('class-', '');
+    updateBreadcrumbs(['Class Selector', `Class${cleanClassNumber}`, 'Academics', subjectName]);
   }, [classNumber, subject, updateBreadcrumbs]);
 
   const subjectName = subject
@@ -60,13 +61,13 @@ const Subject = () => {
   ];
 
   const handleSubModuleClick = (subModule) => {
-    navigate(`/dashboard/${classNumber}/academics/${subject}/${subModule.id}`);
+    navigate(`/class-selector/${classNumber}/academics/${subject}/${subModule.id}`);
   };
 
   return (
     <div className="subject-container">
       <div className="subject-header">
-        <h1 className="subject-title">Class {classNumber} - {subjectName}</h1>
+        <h1 className="subject-title">Class{classNumber.replace('class-', '')} - {subjectName}</h1>
         <p className="subject-subtitle">
           Select a category to access {subjectName} content and materials
         </p>

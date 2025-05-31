@@ -10,10 +10,11 @@ const ClassDashboard = () => {
 
   useEffect(() => {
     if (classNumber) {
-      selectClass(classNumber);
-      updateBreadcrumbs([`Class ${classNumber}`]);
+      const cleanClassNumber = classNumber.replace('class-', '');
+      selectClass(cleanClassNumber);
+      updateBreadcrumbs(['Class Selector', `Class${cleanClassNumber}`]);
     }
-  }, [classNumber, updateBreadcrumbs, selectClass]);
+  }, [classNumber, selectClass, updateBreadcrumbs]);
 
   const modules = [
     {
@@ -21,7 +22,7 @@ const ClassDashboard = () => {
       title: 'Student Registration Form',
       description: 'Manage student data with advanced validation and bulk operations',
       icon: '👥',
-      path: `/dashboard/${classNumber}/student-registration`,
+      path: `/class-selector/${classNumber}/student-registration`,
       color: 'rgba(0, 123, 255, 0.8)'
     },
     {
@@ -29,7 +30,7 @@ const ClassDashboard = () => {
       title: 'Academics',
       description: 'Access subjects, syllabus, assignments, and academic materials',
       icon: '📚',
-      path: `/dashboard/${classNumber}/academics`,
+      path: `/class-selector/${classNumber}/academics`,
       color: 'rgba(40, 167, 69, 0.8)'
     },
     {
@@ -37,7 +38,7 @@ const ClassDashboard = () => {
       title: 'Notification',
       description: 'View and manage important announcements and updates',
       icon: '🔔',
-      path: `/dashboard/${classNumber}/notifications`,
+      path: `/class-selector/${classNumber}/notifications`,
       color: 'rgba(253, 126, 20, 0.8)'
     },
     {
@@ -45,7 +46,7 @@ const ClassDashboard = () => {
       title: 'Holiday Calendar',
       description: 'Check upcoming holidays and important dates',
       icon: '📅',
-      path: `/dashboard/${classNumber}/holiday-calendar`,
+      path: `/class-selector/${classNumber}/holiday-calendar`,
       color: 'rgba(220, 53, 69, 0.8)'
     },
     {
@@ -53,7 +54,7 @@ const ClassDashboard = () => {
       title: "School's Competency Model",
       description: 'Explore competency frameworks and assessment criteria',
       icon: '🏆',
-      path: `/dashboard/${classNumber}/competency-model`,
+      path: `/class-selector/${classNumber}/competency-model`,
       color: 'rgba(111, 66, 193, 0.8)'
     }
   ];
@@ -69,7 +70,7 @@ const ClassDashboard = () => {
   return (
     <div className="class-dashboard-container">
       <div className="dashboard-header">
-        <h1 className="dashboard-title">Class {classNumber} Dashboard</h1>
+        <h1 className="dashboard-title">Class{classNumber.replace('class-', '')} Dashboard</h1>
         <p className="dashboard-subtitle">
           Welcome to your class management hub. Select a module to get started.
         </p>

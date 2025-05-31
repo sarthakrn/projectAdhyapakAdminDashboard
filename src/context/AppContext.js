@@ -17,6 +17,8 @@ export const AppProvider = ({ children, authUser, isAuthenticated: authIsAuthent
   const [selectedClass, setSelectedClass] = useState(null);
   const [breadcrumbs, setBreadcrumbs] = useState([]);
   const auth = useAuth();
+  
+
 
   // Update authentication state based on OIDC auth state
   useEffect(() => {
