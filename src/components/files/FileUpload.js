@@ -18,10 +18,28 @@ const FileUpload = ({
   const fileInputRef = useRef(null);
   const { user } = useApp();
 
-  const handleFileSelect = (files) => {
+  const handleFileSelect = async (files) => {
     if (!files || files.length === 0) return;
     
-    uploadFiles(Array.from(files));
+    const fileArray = Array.from(files);
+    
+    // Validate file batch constraints
+    const batchValidation = s3Service.validateUploadBatch(fileArray);
+    if (!batchValidation.isValid) {
+      alert(batchValidation.error);
+      return;
+    }
+
+    // Validate individual files
+    for (const file of fileArray) {
+      const validation = s3Service.validateFile(file);
+      if (!validation.isValid) {
+        alert(`File "${file.name}": ${validation.error}`);
+        return;
+      }
+    }
+    
+    uploadFiles(fileArray);
   };
 
   const uploadFiles = async (files) => {
@@ -52,6 +70,41 @@ const FileUpload = ({
     }
 
     console.log('✅ Successfully extracted username:', username);
+
+    // Check category file limit before upload
+    try {
+      await s3Service.initializeS3Client(user.id_token);
+      
+      const s3Prefix = s3Service.getS3Prefix(
+        username,
+        classNumber,
+        module,
+        subject,
+        subSection
+      );
+      
+      const limitCheck = await s3Service.checkCategoryFileLimit(s3Prefix);
+      
+      if (limitCheck.isAtLimit) {
+        alert(`Cannot upload more files. This category already contains the maximum of 20 files (${limitCheck.count} files found).`);
+        return;
+      }
+      
+      if (files.length > limitCheck.remaining) {
+        alert(`Cannot upload ${files.length} files. Only ${limitCheck.remaining} more files can be added to this category (current: ${limitCheck.count}/20).`);
+        return;
+      }
+      
+      if (limitCheck.remaining <= 5) {
+        const proceed = window.confirm(`This category currently has ${limitCheck.count} files. You can upload ${limitCheck.remaining} more files before reaching the limit of 20. Do you want to continue?`);
+        if (!proceed) return;
+      }
+      
+    } catch (error) {
+      console.error('Error checking file limits:', error);
+      const proceed = window.confirm('Could not verify file limits. Do you want to continue with the upload?');
+      if (!proceed) return;
+    }
 
     setIsUploading(true);
     setUploadResults(null);
@@ -84,7 +137,7 @@ const FileUpload = ({
         }
       }
       
-      await s3Service.initializeS3Client(idToken);
+      // S3 client already initialized during limit check
 
       // Create S3 key generator function
       const getS3KeyFunction = (filename) => {
@@ -164,7 +217,7 @@ const FileUpload = ({
         ref={fileInputRef}
         type="file"
         multiple
-        accept=".pdf,.png,.jpg,.jpeg"
+        accept=".pdf,.png,.jpg,.jpeg,.gif"
         onChange={handleInputChange}
         style={{ display: 'none' }}
       />
@@ -182,7 +235,9 @@ const FileUpload = ({
             <h3>Upload Files</h3>
             <p>Drag and drop files here or click to browse</p>
             <small>
-              Supported: PDF (max 50MB), PNG/JPG/JPEG (max 5MB each)
+              Supported: PDF (max 10MB, up to 5 files), PNG/JPG/JPEG/GIF (max 2MB each, up to 5 files)
+              <br />
+              Maximum 20 files per category
             </small>
           </div>
         </div>

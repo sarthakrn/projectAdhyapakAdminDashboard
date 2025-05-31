@@ -121,10 +121,11 @@ class S3Service {
   // Validate file type and size
   validateFile(file) {
     const allowedTypes = {
-      'application/pdf': { maxSize: 50 * 1024 * 1024, category: 'document' }, // 50MB
-      'image/png': { maxSize: 5 * 1024 * 1024, category: 'image' }, // 5MB
-      'image/jpg': { maxSize: 5 * 1024 * 1024, category: 'image' }, // 5MB
-      'image/jpeg': { maxSize: 5 * 1024 * 1024, category: 'image' }, // 5MB
+      'application/pdf': { maxSize: 10 * 1024 * 1024, category: 'document' }, // 10MB
+      'image/png': { maxSize: 2 * 1024 * 1024, category: 'image' }, // 2MB
+      'image/jpg': { maxSize: 2 * 1024 * 1024, category: 'image' }, // 2MB
+      'image/jpeg': { maxSize: 2 * 1024 * 1024, category: 'image' }, // 2MB
+      'image/gif': { maxSize: 2 * 1024 * 1024, category: 'image' }, // 2MB
     };
 
     const fileType = file.type;
@@ -146,6 +147,60 @@ class S3Service {
     }
 
     return { isValid: true };
+  }
+
+  // Validate upload batch constraints
+  validateUploadBatch(files) {
+    const pdfFiles = files.filter(file => file.type === 'application/pdf');
+    const imageFiles = files.filter(file => 
+      file.type === 'image/png' || 
+      file.type === 'image/jpg' || 
+      file.type === 'image/jpeg' ||
+      file.type === 'image/gif'
+    );
+
+    // Check PDF file count limit
+    if (pdfFiles.length > 5) {
+      return {
+        isValid: false,
+        error: `Cannot upload more than 5 PDF files at once. You selected ${pdfFiles.length} PDF files.`
+      };
+    }
+
+    // Check image file count limit
+    if (imageFiles.length > 5) {
+      return {
+        isValid: false,
+        error: `Cannot upload more than 5 image files at once. You selected ${imageFiles.length} image files.`
+      };
+    }
+
+    return { isValid: true };
+  }
+
+  // Check if category has reached file limit
+  async checkCategoryFileLimit(s3Prefix) {
+    try {
+      const result = await this.listFiles(s3Prefix);
+      
+      if (!result.success) {
+        // If we can't check, allow upload but warn
+        console.warn('Could not check file count limit:', result.error);
+        return { isAtLimit: false, count: 0 };
+      }
+
+      const currentCount = result.files.length;
+      
+      return {
+        isAtLimit: currentCount >= 20,
+        count: currentCount,
+        remaining: Math.max(0, 20 - currentCount)
+      };
+    } catch (error) {
+      console.error('Error checking file limit:', error);
+      // If we can't check, allow upload but warn
+      return { isAtLimit: false, count: 0 };
+    }
   }
 
   // Sanitize filename
@@ -455,7 +510,8 @@ class S3Service {
       pdf: 'PDF Document',
       png: 'PNG Image',
       jpg: 'JPEG Image',
-      jpeg: 'JPEG Image'
+      jpeg: 'JPEG Image',
+      gif: 'GIF Image'
     };
     return typeMap[extension] || 'Unknown';
   }
