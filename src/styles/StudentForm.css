@@ -29,6 +29,73 @@
   letter-spacing: 0.5px;
 }
 
+.message-banner {
+  padding: 1rem 1.5rem;
+  border-radius: 10px;
+  margin-bottom: 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.error-banner {
+  background: linear-gradient(135deg, rgba(220, 53, 69, 0.9) 0%, rgba(200, 35, 51, 0.9) 100%);
+  color: white;
+}
+
+.success-banner {
+  background: linear-gradient(135deg, rgba(40, 167, 69, 0.9) 0%, rgba(32, 201, 151, 0.9) 100%);
+  color: white;
+}
+
+.close-btn {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  font-size: 1.2rem;
+  line-height: 1;
+}
+
+.close-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+}</text>
+</edits>
+
+<edits>
+
+<old_text>
+.bulk-upload-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(253, 126, 20, 0.4);
+}
+
+.bulk-upload-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.download-sample-btn {
+  background: linear-gradient(135deg, #6c757d 0%, #545b62 100%);
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(108, 117, 125, 0.3);
+  white-space: nowrap;
+}
+
 .bulk-actions {
   display: flex;
   justify-content: flex-end;
@@ -83,9 +150,62 @@
   white-space: nowrap;
 }
 
-.download-sample-btn:hover {
+.download-sample-btn:hover:not(:disabled) {
   transform: translateY(-2px);
   box-shadow: 0 6px 20px rgba(108, 117, 125, 0.4);
+}
+
+.download-sample-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.add-empty-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
+}
+
+.add-empty-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.student-count-info {
+  text-align: center;
+  margin-bottom: 2rem;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 600;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 3rem;
+  color: rgba(255, 255, 255, 0.8);
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 15px;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  margin: 2rem 0;
+}
+
+.add-empty-btn {
+  background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+  white-space: nowrap;
 }
 
 .student-form {
@@ -163,8 +283,13 @@
 }
 
 .student-table th:nth-child(5), 
-.student-table th:nth-child(6) {
-  width: 140px;
+.student-table th:nth-child(6),
+.student-table th:nth-child(7) {
+  width: 120px;
+}
+
+.student-table th:nth-child(8) {
+  width: 80px;
 }
 
 .student-table td {
@@ -210,7 +335,7 @@
 
 .student-table input[type="text"],
 .student-table input[type="tel"],
-.student-table input[type="password"] {
+.student-table input[type="date"] {
   width: 100%;
   padding: 0.5rem;
   border: 1px solid rgba(255, 255, 255, 0.2);
@@ -226,13 +351,13 @@
 
 .student-table input[type="text"]::placeholder,
 .student-table input[type="tel"]::placeholder,
-.student-table input[type="password"]::placeholder {
+.student-table input[type="date"]::placeholder {
   color: rgba(255, 255, 255, 0.6);
 }
 
 .student-table input[type="text"]:focus,
 .student-table input[type="tel"]:focus,
-.student-table input[type="password"]:focus {
+.student-table input[type="date"]:focus {
   outline: none;
   border-color: rgba(0, 123, 255, 0.8);
   background: rgba(255, 255, 255, 0.2);
@@ -244,28 +369,33 @@
   box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
 }
 
-.form-actions {
-  display: flex;
-  justify-content: center;
-  margin-bottom: 2rem;
-}
-
-.add-student-btn {
-  background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+.remove-btn {
+  background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
   color: white;
   border: none;
-  padding: 0.75rem 2rem;
-  border-radius: 10px;
+  padding: 0.3rem 0.6rem;
+  border-radius: 50%;
   cursor: pointer;
-  font-size: 1.1rem;
+  font-size: 1rem;
   font-weight: 600;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+  box-shadow: 0 2px 8px rgba(220, 53, 69, 0.3);
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
 }
 
-.add-student-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
+.remove-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(220, 53, 69, 0.4);
+}
+
+.remove-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .global-actions {
@@ -296,37 +426,33 @@
   max-width: 300px;
 }
 
-.add-selected-btn {
+.create-btn {
   background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
   color: white;
   box-shadow: 0 4px 15px rgba(0, 123, 255, 0.3);
 }
 
-.add-selected-btn:hover {
+.create-btn:hover:not(:disabled) {
   transform: translateY(-2px);
   box-shadow: 0 6px 20px rgba(0, 123, 255, 0.4);
 }
 
-.remove-selected-btn {
+.delete-btn {
   background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
   color: white;
   box-shadow: 0 4px 15px rgba(220, 53, 69, 0.3);
 }
 
-.remove-selected-btn:hover {
+.delete-btn:hover:not(:disabled) {
   transform: translateY(-2px);
   box-shadow: 0 6px 20px rgba(220, 53, 69, 0.4);
 }
 
-.send-details-btn {
-  background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
-  color: white;
-  box-shadow: 0 4px 15px rgba(23, 162, 184, 0.3);
-}
-
-.send-details-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(23, 162, 184, 0.4);
+.create-btn:disabled,
+.delete-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
 }
 
 /* Responsive Design */
@@ -429,24 +555,27 @@
   }
   
   .student-table th:nth-child(5), 
-  .student-table th:nth-child(6) {
-    width: 110px;
+  .student-table th:nth-child(6),
+  .student-table th:nth-child(7) {
+    width: 90px;
+  }
+  
+  .student-table th:nth-child(8) {
+    width: 60px;
   }
   
   .student-table input[type="text"],
   .student-table input[type="tel"],
-  .student-table input[type="password"] {
+  .student-table input[type="date"] {
     padding: 0.4rem;
     font-size: 0.85rem;
   }
   
-  .form-actions {
-    margin-bottom: 1.5rem;
-  }
-  
-  .add-student-btn {
-    padding: 0.6rem 1.5rem;
-    font-size: 1rem;
+  .remove-btn {
+    width: 25px;
+    height: 25px;
+    font-size: 0.9rem;
+    padding: 0.2rem 0.4rem;
   }
   
   .global-actions {
@@ -529,13 +658,13 @@
 @media (prefers-color-scheme: dark) {
   .student-table input[type="text"],
   .student-table input[type="tel"],
-  .student-table input[type="password"] {
+  .student-table input[type="date"] {
     color: rgba(255, 255, 255, 0.95);
   }
   
   .student-table input[type="text"]::placeholder,
   .student-table input[type="tel"]::placeholder,
-  .student-table input[type="password"]::placeholder {
+  .student-table input[type="date"]::placeholder {
     color: rgba(255, 255, 255, 0.7);
   }
 }

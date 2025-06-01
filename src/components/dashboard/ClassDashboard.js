@@ -18,13 +18,14 @@ const ClassDashboard = () => {
 
   const modules = [
     {
-      id: 'student-registration',
-      title: 'Student Registration Form',
-      description: 'Manage student data with advanced validation and bulk operations',
+      id: 'student-management',
+      title: 'Student Management',
+      description: 'View, edit, and manage student profiles. Includes bulk operations for CSV upload and bulk deletions',
       icon: '👥',
-      path: `/class-selector/${classNumber}/student-registration`,
+      path: `/class-selector/${classNumber}/student-management`,
       color: 'rgba(0, 123, 255, 0.8)'
     },
+
     {
       id: 'academics',
       title: 'Academics',

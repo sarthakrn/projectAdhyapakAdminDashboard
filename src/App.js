@@ -7,7 +7,7 @@ import Login from './components/auth/Login';
 
 import ClassSelector from './components/dashboard/ClassSelector';
 import ClassDashboard from './components/dashboard/ClassDashboard';
-import StudentForm from './components/modules/StudentForm';
+import StudentManagement from './components/modules/StudentManagement';
 import Academics from './components/academics/Academics';
 import Subject from './components/academics/Subject';
 import SubModule from './components/academics/SubModule';
@@ -154,9 +154,9 @@ const AppContent = () => {
           </ProtectedRoute>
         } />
         
-        <Route path="/class-selector/:classNumber/student-registration" element={
+        <Route path="/class-selector/:classNumber/student-management" element={
           <ProtectedRoute>
-            <StudentForm />
+            <StudentManagement />
           </ProtectedRoute>
         } />
         

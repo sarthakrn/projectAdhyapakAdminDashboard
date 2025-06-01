@@ -1,11 +1,4 @@
-firstName,lastName,phoneNumber
-John,Doe,1234567890
-Jane,Smith,0987654321
-Mike,Johnson,1555123456
-Sarah,Williams,1777888999
-David,Brown,1999666333
-Emily,Davis,1444555777
-Robert,Miller,1222333444
-Lisa,Wilson,1888777666
-James,Moore,1333444555
-Anna,Taylor,1666777888
+FirstName,LastName,DateOfBirth,Section
+John,Doe,21-07-2010,A
+Jane,Smith,15-08-2010,A
+Mike,Johnson,03-09-2010,B

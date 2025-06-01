@@ -32,9 +32,7 @@ const Breadcrumb = () => {
         let moduleRoute = '';
         
         switch (moduleName) {
-          case 'Student Registration':
-            moduleRoute = 'student-registration';
-            break;
+
           case 'Academics':
             moduleRoute = 'academics';
             break;
