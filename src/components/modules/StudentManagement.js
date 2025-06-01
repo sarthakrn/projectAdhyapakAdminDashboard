@@ -233,36 +233,7 @@ const StudentManagement = () => {
     setEditingStudent(null);
   };
 
-  const handleDeleteStudent = async (student) => {
-    const confirmDelete = window.confirm(
-      `Are you sure you want to delete student "${student.firstName} ${student.lastName}" (${student.username})? This action cannot be undone.`
-    );
 
-    if (!confirmDelete) return;
-
-    setLoading(true);
-    try {
-      const result = await studentApiService.deleteStudents({ username: student.username }, user);
-      
-      if (result.success) {
-        if (result.isFireAndForget) {
-          showSuccess('Student deletion process started. The list will update shortly.');
-          setTimeout(() => loadStudents(), 2000);
-        } else {
-          showSuccess('Student deleted successfully!');
-          await loadStudents();
-        }
-      } else {
-        const errorMessage = result.error || 'Unknown error occurred';
-        showError(`Failed to delete student: ${errorMessage}`);
-      }
-    } catch (err) {
-      console.error('Delete error:', err);
-      showError(`Network error occurred while deleting student: ${err.message}`);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleBulkDelete = async () => {
     if (selectedStudents.size === 0) {
@@ -543,25 +514,20 @@ const StudentManagement = () => {
         </div>
       )}
 
-      <div className="management-actions">
-        <button 
-          onClick={() => setShowBulkOperations(!showBulkOperations)}
-          className="action-btn"
-        >
-          {showBulkOperations ? 'Hide' : 'Show'} Bulk Operations
-        </button>
-        <button 
-          onClick={() => setShowSingleForm(!showSingleForm)}
-          className="action-btn"
-        >
-          {showSingleForm ? 'Hide' : 'Show'} Add Single Student
-        </button>
+      <div className="top-actions">
         <button 
           onClick={loadStudents}
           disabled={loading}
-          className="action-btn refresh-btn"
+          className="refresh-icon-btn"
+          title="Refresh Data"
         >
-          {loading ? 'Refreshing...' : 'Refresh Data'}
+          {loading ? '↻' : '🔄'}
+        </button>
+        <button 
+          onClick={() => setShowBulkOperations(!showBulkOperations)}
+          className="bulk-create-btn"
+        >
+          {showBulkOperations ? 'Hide' : ''} Bulk Create
         </button>
       </div>
 
@@ -886,22 +852,13 @@ const StudentManagement = () => {
                         </button>
                       </div>
                     ) : (
-                      <div className="row-actions">
-                        <button 
-                          onClick={() => handleEditStudent(student)} 
-                          className="edit-btn"
-                          disabled={loading}
-                        >
-                          Edit
-                        </button>
-                        <button 
-                          onClick={() => handleDeleteStudent(student)} 
-                          className="delete-btn"
-                          disabled={loading}
-                        >
-                          Delete
-                        </button>
-                      </div>
+                      <button 
+                        onClick={() => handleEditStudent(student)} 
+                        className="edit-btn"
+                        disabled={loading}
+                      >
+                        Edit
+                      </button>
                     )}
                   </td>
                 </tr>
@@ -914,6 +871,12 @@ const StudentManagement = () => {
       {/* Bulk Actions */}
       {filteredStudents.length > 0 && (
         <div className="bulk-actions">
+          <button 
+            onClick={() => setShowSingleForm(!showSingleForm)}
+            className="add-single-btn"
+          >
+            Add Single Student
+          </button>
           <button 
             onClick={handleBulkDelete}
             disabled={selectedStudents.size === 0 || loading}
