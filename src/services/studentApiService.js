@@ -81,7 +81,8 @@ class StudentApiService {
           lastName: student.lastName.trim(),
           dateOfBirth: student.dateOfBirth,
           className: this.formatClassName(student.className || classNumber),
-          section: student.section.toUpperCase()
+          section: student.section.toUpperCase(),
+          rollNumber: student.rollNumber.trim()
         }));
 
         payload = {
@@ -96,6 +97,7 @@ class StudentApiService {
           dateOfBirth: studentsData.dateOfBirth,
           className: this.formatClassName(studentsData.className || classNumber),
           section: studentsData.section.toUpperCase(),
+          rollNumber: studentsData.rollNumber.trim(),
           schoolCode
         };
       }
@@ -193,7 +195,8 @@ class StudentApiService {
             ...(update.lastName && { lastName: update.lastName.trim() }),
             ...(update.className && { className: this.formatClassName(update.className) }),
             ...(update.section && { section: update.section.toUpperCase() }),
-            ...(update.dateOfBirth && { dateOfBirth: update.dateOfBirth })
+            ...(update.dateOfBirth && { dateOfBirth: update.dateOfBirth }),
+            ...(update.rollNumber && { rollNumber: update.rollNumber.trim() })
           }
         }));
 
@@ -208,7 +211,8 @@ class StudentApiService {
             ...(updatesData.lastName && { lastName: updatesData.lastName.trim() }),
             ...(updatesData.className && { className: this.formatClassName(updatesData.className) }),
             ...(updatesData.section && { section: updatesData.section.toUpperCase() }),
-            ...(updatesData.dateOfBirth && { dateOfBirth: updatesData.dateOfBirth })
+            ...(updatesData.dateOfBirth && { dateOfBirth: updatesData.dateOfBirth }),
+            ...(updatesData.rollNumber && { rollNumber: updatesData.rollNumber.trim() })
           }
         };
       }
@@ -321,6 +325,10 @@ class StudentApiService {
       errors.push('Section is required');
     }
 
+    if (!student.rollNumber || typeof student.rollNumber !== 'string' || student.rollNumber.trim().length === 0) {
+      errors.push('Roll number is required');
+    }
+
     return {
       isValid: errors.length === 0,
       errors
@@ -354,7 +362,7 @@ class StudentApiService {
       }
 
       const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
-      const requiredHeaders = ['firstname', 'lastname', 'dateofbirth', 'section'];
+      const requiredHeaders = ['firstname', 'lastname', 'dateofbirth', 'section', 'rollnumber'];
       
       const missingHeaders = requiredHeaders.filter(required => 
         !headers.some(header => header.includes(required.replace(/([A-Z])/g, '').toLowerCase()))
@@ -387,6 +395,8 @@ class StudentApiService {
             student.dateOfBirth = value;
           } else if (header.includes('section')) {
             student.section = value;
+          } else if (header.includes('rollnumber') || header.includes('roll')) {
+            student.rollNumber = value;
           }
         });
 
@@ -418,11 +428,11 @@ class StudentApiService {
 
   // Generate sample CSV content (new format)
   generateSampleCSV() {
-    return `FirstName,LastName,DateOfBirth,Section
-John,Doe,21-07-2010,A
-Jane,Smith,15-08-2010,A
-Mike,Johnson,03-09-2010,B
-Sarah,Williams,12-11-2010,B`;
+    return `FirstName,LastName,DateOfBirth,Section,RollNumber
+John,Doe,21-07-2010,A,001
+Jane,Smith,15-08-2010,A,002
+Mike,Johnson,03-09-2010,B,003
+Sarah,Williams,12-11-2010,B,004`;
   }
 }
 

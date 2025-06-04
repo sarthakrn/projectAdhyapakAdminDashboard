@@ -11,6 +11,12 @@ import StudentManagement from './components/modules/StudentManagement';
 import Academics from './components/academics/Academics';
 import Subject from './components/academics/Subject';
 import SubModule from './components/academics/SubModule';
+import TermSelection from './components/evaluation/pages/TermSelection';
+import TeacherSetup from './components/evaluation/pages/TeacherSetup';
+import StudentList from './components/evaluation/pages/StudentList';
+import ProcessStudentAnswers from './components/evaluation/pages/ProcessStudentAnswers';
+import CameraCapture from './components/evaluation/pages/CameraCapture';
+import TimetableManagement from './components/timetable/TimetableManagement';
 import './App.css';
 
 // Protected Route Component
@@ -70,39 +76,31 @@ const NavigationGuard = () => {
 
 // Module Components (placeholders)
 const Notifications = () => {
-  const { classNumber } = useParams();
   const { updateBreadcrumbs } = useApp();
 
   useEffect(() => {
-    if (classNumber) {
-      const cleanClassNumber = classNumber.replace('class-', '');
-      updateBreadcrumbs(['Class Selector', `Class${cleanClassNumber}`, 'Notification']);
-    }
-  }, [classNumber, updateBreadcrumbs]);
+    updateBreadcrumbs(['Class Selector', 'Notifications']);
+  }, [updateBreadcrumbs]);
 
   return (
     <div className="placeholder-container">
-      <h2>Class{classNumber.replace('class-', '')} - Notifications</h2>
-      <p>Notification content will be implemented here.</p>
+      <h2>School Notifications</h2>
+      <p>School-wide notification content will be implemented here.</p>
     </div>
   );
 };
 
 const HolidayCalendar = () => {
-  const { classNumber } = useParams();
   const { updateBreadcrumbs } = useApp();
 
   useEffect(() => {
-    if (classNumber) {
-      const cleanClassNumber = classNumber.replace('class-', '');
-      updateBreadcrumbs(['Class Selector', `Class${cleanClassNumber}`, 'Holiday Calendar']);
-    }
-  }, [classNumber, updateBreadcrumbs]);
+    updateBreadcrumbs(['Class Selector', 'Holiday Calendar']);
+  }, [updateBreadcrumbs]);
 
   return (
     <div className="placeholder-container">
-      <h2>Class{classNumber.replace('class-', '')} - Holiday Calendar</h2>
-      <p>Holiday calendar content will be implemented here.</p>
+      <h2>School Holiday Calendar</h2>
+      <p>School-wide holiday calendar content will be implemented here.</p>
     </div>
   );
 };
@@ -178,21 +176,58 @@ const AppContent = () => {
           </ProtectedRoute>
         } />
         
-        <Route path="/class-selector/:classNumber/notifications" element={
+        <Route path="/class-selector/:classNumber/academics/:subject/evaluation" element={
           <ProtectedRoute>
-            <Notifications />
+            <TermSelection />
           </ProtectedRoute>
         } />
         
-        <Route path="/class-selector/:classNumber/holiday-calendar" element={
+        <Route path="/class-selector/:classNumber/academics/:subject/evaluation/:termId" element={
           <ProtectedRoute>
-            <HolidayCalendar />
+            <TeacherSetup />
+          </ProtectedRoute>
+        } />
+        
+        <Route path="/class-selector/:classNumber/academics/:subject/evaluation/:termId/students" element={
+          <ProtectedRoute>
+            <StudentList />
+          </ProtectedRoute>
+        } />
+        
+        <Route path="/class-selector/:classNumber/academics/:subject/evaluation/:termId/students/:studentId/process" element={
+          <ProtectedRoute>
+            <ProcessStudentAnswers />
+          </ProtectedRoute>
+        } />
+        
+        <Route path="/class-selector/:classNumber/academics/:subject/evaluation/:termId/students/:studentId/capture" element={
+          <ProtectedRoute>
+            <CameraCapture />
+          </ProtectedRoute>
+        } />
+        
+        <Route path="/class-selector/:classNumber/timetable" element={
+          <ProtectedRoute>
+            <TimetableManagement />
           </ProtectedRoute>
         } />
         
         <Route path="/class-selector/:classNumber/competency-model" element={
           <ProtectedRoute>
             <CompetencyModel />
+          </ProtectedRoute>
+        } />
+        
+        {/* School-wide routes */}
+        <Route path="/notifications" element={
+          <ProtectedRoute>
+            <Notifications />
+          </ProtectedRoute>
+        } />
+        
+        <Route path="/holiday-calendar" element={
+          <ProtectedRoute>
+            <HolidayCalendar />
           </ProtectedRoute>
         } />
         

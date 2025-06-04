@@ -57,11 +57,22 @@ const Subject = () => {
       description: `Previous year papers and sample tests for ${subjectName}`,
       icon: '📄',
       color: 'rgba(111, 66, 193, 0.8)'
+    },
+    {
+      id: 'evaluation',
+      title: 'Evaluation',
+      description: `Student answer sheet evaluation and grading for ${subjectName}`,
+      icon: '📊',
+      color: 'rgba(156, 39, 176, 0.8)'
     }
   ];
 
   const handleSubModuleClick = (subModule) => {
-    navigate(`/class-selector/${classNumber}/academics/${subject}/${subModule.id}`);
+    if (subModule.id === 'evaluation') {
+      navigate(`/class-selector/${classNumber}/academics/${subject}/evaluation`);
+    } else {
+      navigate(`/class-selector/${classNumber}/academics/${subject}/${subModule.id}`);
+    }
   };
 
   return (

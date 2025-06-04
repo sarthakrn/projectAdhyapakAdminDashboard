@@ -32,7 +32,8 @@ const StudentManagement = () => {
     firstName: '',
     lastName: '',
     dateOfBirth: '',
-    section: ''
+    section: '',
+    rollNumber: ''
   });
 
   const loadStudents = useCallback(async () => {
@@ -285,6 +286,10 @@ const StudentManagement = () => {
       // Only allow letters and spaces
       const textValue = value.replace(/[^a-zA-Z\s]/g, '');
       setEditingStudent(prev => ({ ...prev, [field]: textValue }));
+    } else if (field === 'rollNumber') {
+      // Allow alphanumeric characters and common separators
+      const rollValue = value.replace(/[^a-zA-Z0-9\-_]/g, '');
+      setEditingStudent(prev => ({ ...prev, [field]: rollValue }));
     } else {
       setEditingStudent(prev => ({ ...prev, [field]: value }));
     }
@@ -379,6 +384,8 @@ const StudentManagement = () => {
         
         if (field === 'firstName' || field === 'lastName') {
           updatedValue = value.replace(/[^a-zA-Z\s]/g, '');
+        } else if (field === 'rollNumber') {
+          updatedValue = value.replace(/[^a-zA-Z0-9\-_]/g, '');
         }
         
         return { ...student, [field]: updatedValue };
@@ -433,6 +440,8 @@ const StudentManagement = () => {
     
     if (field === 'firstName' || field === 'lastName') {
       updatedValue = value.replace(/[^a-zA-Z\s]/g, '');
+    } else if (field === 'rollNumber') {
+      updatedValue = value.replace(/[^a-zA-Z0-9\-_]/g, '');
     }
     
     setSingleStudentForm(prev => ({ ...prev, [field]: updatedValue }));
@@ -441,7 +450,8 @@ const StudentManagement = () => {
   const handleCreateSingleStudent = async () => {
     // Validate form
     if (!singleStudentForm.firstName.trim() || !singleStudentForm.lastName.trim() || 
-        !singleStudentForm.dateOfBirth || !singleStudentForm.section.trim()) {
+        !singleStudentForm.dateOfBirth || !singleStudentForm.section.trim() || 
+        !singleStudentForm.rollNumber.trim()) {
       alert('Please fill in all required fields.');
       return;
     }
@@ -466,11 +476,11 @@ const StudentManagement = () => {
       if (result.success) {
         if (result.isFireAndForget) {
           showSuccess('Student creation process started. The student list will reflect changes once processing is complete.');
-          setSingleStudentForm({ firstName: '', lastName: '', dateOfBirth: '', section: '' });
+          setSingleStudentForm({ firstName: '', lastName: '', dateOfBirth: '', section: '', rollNumber: '' });
           setTimeout(() => loadStudents(), 2000);
         } else {
           showSuccess('Student created successfully!');
-          setSingleStudentForm({ firstName: '', lastName: '', dateOfBirth: '', section: '' });
+          setSingleStudentForm({ firstName: '', lastName: '', dateOfBirth: '', section: '', rollNumber: '' });
           await loadStudents();
         }
       } else {
@@ -573,6 +583,16 @@ const StudentManagement = () => {
               />
             </div>
             <div className="form-group">
+              <label>Roll Number *</label>
+              <input
+                type="text"
+                value={singleStudentForm.rollNumber}
+                onChange={(e) => handleSingleFormChange('rollNumber', e.target.value)}
+                placeholder="Enter roll number"
+                maxLength="10"
+              />
+            </div>
+            <div className="form-group">
               <button 
                 onClick={handleCreateSingleStudent}
                 disabled={loading}
@@ -610,7 +630,7 @@ const StudentManagement = () => {
               </button>
             </div>
             <p className="csv-format-info">
-              CSV Format: FirstName, LastName, DateOfBirth (DD-MM-YYYY), Section
+              CSV Format: FirstName, LastName, DateOfBirth (DD-MM-YYYY), Section, RollNumber
             </p>
           </div>
 
@@ -649,6 +669,7 @@ const StudentManagement = () => {
                       <th>Last Name</th>
                       <th>Date of Birth</th>
                       <th>Section</th>
+                      <th>Roll Number</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -691,6 +712,14 @@ const StudentManagement = () => {
                             type="text"
                             value={student.section}
                             onChange={(e) => handleCsvInputChange(student.id, 'section', e.target.value)}
+                            className="csv-edit-input"
+                          />
+                        </td>
+                        <td>
+                          <input
+                            type="text"
+                            value={student.rollNumber}
+                            onChange={(e) => handleCsvInputChange(student.id, 'rollNumber', e.target.value)}
                             className="csv-edit-input"
                           />
                         </td>
@@ -747,13 +776,14 @@ const StudentManagement = () => {
               <th>Last Name</th>
               <th>Date of Birth</th>
               <th>Section</th>
+              <th>Roll Number</th>
               <th>Actions</th>
             </tr>
           </thead>
           <tbody>
             {filteredStudents.length === 0 ? (
               <tr>
-                <td colSpan="7" className="no-students-row">
+                <td colSpan="8" className="no-students-row">
                   <div className="no-students">
                     <p>
                       {selectedSection 
@@ -831,6 +861,18 @@ const StudentManagement = () => {
                       />
                     ) : (
                       student.section
+                    )}
+                  </td>
+                  <td>
+                    {editingStudent?.username === student.username ? (
+                      <input
+                        type="text"
+                        value={editingStudent.rollNumber}
+                        onChange={(e) => handleInputChange('rollNumber', e.target.value)}
+                        className="edit-input"
+                      />
+                    ) : (
+                      student.rollNumber
                     )}
                   </td>
                   <td className="actions-cell">

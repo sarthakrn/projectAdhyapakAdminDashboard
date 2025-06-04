@@ -1,0 +1,495 @@
+.teacher-setup-container {
+  width: 100%;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 40px 20px;
+}
+
+.teacher-setup-header {
+  text-align: center;
+  margin-bottom: 40px;
+  animation: fadeInUp 0.6s ease-out;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  padding: 32px;
+  border-radius: 20px;
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.1),
+    0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.teacher-setup-title {
+  margin: 0 0 16px 0;
+  font-size: 36px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.95);
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+  line-height: 1.2;
+  letter-spacing: 0.5px;
+}
+
+.teacher-setup-subtitle {
+  margin: 0;
+  font-size: 18px;
+  color: rgba(255, 255, 255, 0.8);
+  max-width: 600px;
+  margin: 0 auto;
+  line-height: 1.6;
+  font-weight: 400;
+}
+
+.upload-section {
+  max-width: 1000px;
+  margin: 0 auto;
+  animation: fadeInUp 0.8s ease-out 0.2s both;
+}
+
+.upload-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 32px;
+  margin-bottom: 40px;
+}
+
+.upload-card {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 20px;
+  padding: 32px;
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.1),
+    0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  animation: slideInUp 0.6s ease-out;
+  animation-fill-mode: both;
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(50px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.upload-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 
+    0 15px 40px rgba(0, 0, 0, 0.2),
+    0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.upload-icon-container {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.upload-icon {
+  font-size: 48px;
+  width: 80px;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--upload-color);
+  border-radius: 20px;
+  color: white;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  transition: transform 0.3s ease;
+  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.3));
+}
+
+.upload-card:hover .upload-icon {
+  transform: scale(1.05);
+}
+
+.upload-content {
+  text-align: center;
+}
+
+.upload-title {
+  margin: 0 0 12px 0;
+  font-size: 24px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.95);
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+}
+
+.upload-description {
+  margin: 0 0 20px 0;
+  font-size: 16px;
+  color: rgba(255, 255, 255, 0.8);
+  line-height: 1.5;
+}
+
+.upload-status {
+  margin-bottom: 24px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.status-success {
+  color: #4caf50;
+  font-weight: 600;
+  font-size: 14px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.status-pending {
+  color: rgba(255, 255, 255, 0.8);
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.upload-button {
+  display: inline-block;
+  padding: 12px 24px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.1));
+  color: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: 600;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.upload-button:hover {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.2));
+  border-color: rgba(255, 255, 255, 0.5);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+}
+
+.file-input {
+  display: none;
+}
+
+.continue-section {
+  display: flex;
+  justify-content: center;
+  margin-top: 40px;
+}
+
+.continue-button {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px 40px;
+  background: linear-gradient(135deg, #4caf50, #45a049);
+  color: white;
+  border: none;
+  border-radius: 16px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: 600;
+  font-size: 18px;
+  box-shadow: 0 8px 24px rgba(76, 175, 80, 0.3);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  min-width: 300px;
+  justify-content: center;
+}
+
+.continue-button.active:hover {
+  background: linear-gradient(135deg, #45a049, #3d8b40);
+  transform: translateY(-3px);
+  box-shadow: 0 12px 32px rgba(76, 175, 80, 0.4);
+}
+
+.continue-button.disabled {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.1));
+  color: rgba(255, 255, 255, 0.6);
+  cursor: not-allowed;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.continue-button.disabled:hover {
+  transform: none;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.continue-icon {
+  font-size: 20px;
+}
+
+.continue-text {
+  flex: 1;
+  text-align: center;
+}
+
+.continue-arrow {
+  font-size: 18px;
+  transition: transform 0.3s ease;
+}
+
+.continue-button.active:hover .continue-arrow {
+  transform: translateX(4px);
+}
+
+@media (max-width: 1024px) {
+  .teacher-setup-container {
+    padding: 24px 16px;
+  }
+  
+  .teacher-setup-header {
+    padding: 24px 20px;
+    margin-bottom: 32px;
+  }
+  
+  .upload-cards {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+  
+  .teacher-setup-title {
+    font-size: 32px;
+  }
+  
+  .teacher-setup-subtitle {
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 768px) {
+  .teacher-setup-container {
+    padding: 20px 16px;
+  }
+  
+  .teacher-setup-header {
+    padding: 20px 16px;
+    margin-bottom: 24px;
+  }
+  
+  .teacher-setup-title {
+    font-size: 28px;
+  }
+  
+  .teacher-setup-subtitle {
+    font-size: 15px;
+  }
+  
+  .upload-card {
+    padding: 24px 20px;
+  }
+  
+  .upload-icon {
+    width: 60px;
+    height: 60px;
+    font-size: 32px;
+  }
+  
+  .upload-title {
+    font-size: 20px;
+  }
+  
+  .upload-description {
+    font-size: 14px;
+  }
+  
+  .continue-button {
+    padding: 16px 32px;
+    font-size: 16px;
+    min-width: 250px;
+  }
+}
+
+@media (max-width: 480px) {
+  .teacher-setup-container {
+    padding: 16px 12px;
+  }
+  
+  .teacher-setup-header {
+    padding: 16px 12px;
+  }
+  
+  .teacher-setup-title {
+    font-size: 24px;
+  }
+  
+  .teacher-setup-subtitle {
+    font-size: 14px;
+  }
+  
+  .upload-card {
+    padding: 20px 16px;
+  }
+  
+  .upload-icon {
+    width: 50px;
+    height: 50px;
+    font-size: 28px;
+  }
+  
+  .upload-title {
+    font-size: 18px;
+  }
+  
+  .upload-description {
+    font-size: 13px;
+  }
+  
+  .upload-button {
+    padding: 10px 20px;
+    font-size: 12px;
+  }
+  
+  .continue-button {
+    padding: 14px 24px;
+    font-size: 14px;
+    min-width: 200px;
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .continue-text {
+    text-align: center;
+  }
+  
+  .continue-arrow {
+    transform: rotate(90deg);
+  }
+  
+  .continue-button.active:hover .continue-arrow {
+    transform: rotate(90deg) translateX(4px);
+  }
+}
+
+/* Focus styles for accessibility */
+.upload-button:focus,
+.continue-button:focus {
+  outline: 3px solid rgba(255, 255, 255, 0.5);
+  outline-offset: 4px;
+}
+
+.upload-button:focus-visible,
+.continue-button:focus-visible {
+  outline: 3px solid rgba(255, 255, 255, 0.7);
+  outline-offset: 4px;
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .teacher-setup-header,
+  .upload-section,
+  .upload-card {
+    animation: none;
+  }
+  
+  .upload-card,
+  .upload-button,
+  .continue-button {
+    transition: none;
+  }
+  
+  .upload-card:hover,
+  .upload-button:hover,
+  .continue-button:hover {
+    transform: none;
+  }
+  
+  .upload-icon {
+    transition: none;
+  }
+  
+  .upload-card:hover .upload-icon {
+    transform: none;
+  }
+  
+  .continue-arrow {
+    transition: none;
+  }
+  
+  .continue-button.active:hover .continue-arrow {
+    transform: none;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .upload-card {
+    border: 2px solid #000;
+  }
+  
+  .teacher-setup-title {
+    color: #000;
+  }
+  
+  .teacher-setup-subtitle,
+  .upload-title {
+    color: #333;
+  }
+  
+  .upload-description {
+    color: #666;
+  }
+  
+  .upload-button {
+    border: 2px solid #000;
+  }
+  
+  .continue-button {
+    border: 2px solid #000;
+  }
+}
+
+/* Print styles */
+@media print {
+  .teacher-setup-container {
+    background: white;
+    padding: 20px;
+  }
+  
+  .teacher-setup-header {
+    box-shadow: none;
+    border: 1px solid #ccc;
+  }
+  
+  .upload-cards {
+    display: block;
+  }
+  
+  .upload-card {
+    break-inside: avoid;
+    box-shadow: none;
+    border: 1px solid #ccc;
+    margin-bottom: 16px;
+    page-break-inside: avoid;
+  }
+  
+  .continue-button {
+    display: none;
+  }
+}

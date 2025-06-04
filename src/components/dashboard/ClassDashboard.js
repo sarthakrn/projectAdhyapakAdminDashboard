@@ -35,20 +35,12 @@ const ClassDashboard = () => {
       color: 'rgba(40, 167, 69, 0.8)'
     },
     {
-      id: 'notifications',
-      title: 'Notification',
-      description: 'View and manage important announcements and updates',
-      icon: '🔔',
-      path: `/class-selector/${classNumber}/notifications`,
-      color: 'rgba(253, 126, 20, 0.8)'
-    },
-    {
-      id: 'holiday-calendar',
-      title: 'Holiday Calendar',
-      description: 'Check upcoming holidays and important dates',
-      icon: '📅',
-      path: `/class-selector/${classNumber}/holiday-calendar`,
-      color: 'rgba(220, 53, 69, 0.8)'
+      id: 'timetable',
+      title: 'Timetable',
+      description: 'Create and manage class timetables and schedules',
+      icon: '📋',
+      path: `/class-selector/${classNumber}/timetable`,
+      color: 'rgba(156, 39, 176, 0.8)'
     },
     {
       id: 'competency-model',

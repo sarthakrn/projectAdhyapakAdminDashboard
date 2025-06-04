@@ -62,6 +62,51 @@ const ClassSelector = () => {
           </button>
         ))}
       </div>
+
+      <div className="school-wide-section">
+        <div className="section-header">
+          <h2 className="section-title">School-Wide Features</h2>
+          <p className="section-subtitle">
+            Access general school information and announcements
+          </p>
+        </div>
+        
+        <div className="school-features-grid">
+          <button
+            className="feature-card"
+            onClick={() => navigate('/notifications')}
+            style={{
+              '--feature-color': 'rgba(253, 126, 20, 0.8)',
+              '--animation-delay': '0.3s'
+            }}
+            type="button"
+          >
+            <div className="feature-icon">🔔</div>
+            <div className="feature-content">
+              <h3 className="feature-title">Notification</h3>
+              <p className="feature-description">View and manage important announcements and updates</p>
+            </div>
+            <div className="feature-arrow">→</div>
+          </button>
+          
+          <button
+            className="feature-card"
+            onClick={() => navigate('/holiday-calendar')}
+            style={{
+              '--feature-color': 'rgba(220, 53, 69, 0.8)',
+              '--animation-delay': '0.4s'
+            }}
+            type="button"
+          >
+            <div className="feature-icon">📅</div>
+            <div className="feature-content">
+              <h3 className="feature-title">Holiday Calendar</h3>
+              <p className="feature-description">Check upcoming holidays and important dates</p>
+            </div>
+            <div className="feature-arrow">→</div>
+          </button>
+        </div>
+      </div>
     </div>
   );
 };
