@@ -16,6 +16,7 @@ export const AppProvider = ({ children, authUser, isAuthenticated: authIsAuthent
   const [user, setUser] = useState(null);
   const [selectedClass, setSelectedClass] = useState(null);
   const [breadcrumbs, setBreadcrumbs] = useState([]);
+  const [sessionExpired, setSessionExpired] = useState(false);
   const auth = useAuth();
   
 
@@ -25,6 +26,7 @@ export const AppProvider = ({ children, authUser, isAuthenticated: authIsAuthent
     if (authIsAuthenticated && authUser) {
       setIsAuthenticated(true);
       setUser(authUser);
+      setSessionExpired(false);
     } else {
       setIsAuthenticated(false);
       setUser(null);
@@ -32,6 +34,53 @@ export const AppProvider = ({ children, authUser, isAuthenticated: authIsAuthent
       setBreadcrumbs([]);
     }
   }, [authUser, authIsAuthenticated]);
+
+  const handleSessionExpiry = useCallback(async () => {
+    setSessionExpired(true);
+    setIsAuthenticated(false);
+    setUser(null);
+    setSelectedClass(null);
+    setBreadcrumbs([]);
+    
+    try {
+      await auth.removeUser();
+    } catch (error) {
+      console.error('Error removing user session:', error);
+    }
+    
+    // Force redirect to login after a brief delay to show the expiry message
+    setTimeout(() => {
+      window.location.href = '/login';
+    }, 3000);
+  }, [auth]);
+
+  // Check token expiry periodically
+  useEffect(() => {
+    if (!isAuthenticated || !user?.id_token) return;
+
+    const checkTokenExpiry = () => {
+      try {
+        const token = user.id_token;
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const currentTime = Math.floor(Date.now() / 1000);
+        
+        // Check if token expires in the next 5 minutes
+        if (payload.exp && payload.exp - currentTime < 300) {
+          console.warn('Token expiring soon');
+          handleSessionExpiry();
+        }
+      } catch (error) {
+        console.error('Error checking token expiry:', error);
+        handleSessionExpiry();
+      }
+    };
+
+    // Check immediately and then every 5 minutes
+    checkTokenExpiry();
+    const interval = setInterval(checkTokenExpiry, 5 * 60 * 1000);
+
+    return () => clearInterval(interval);
+  }, [isAuthenticated, user, handleSessionExpiry]);
 
   const login = useCallback(async () => {
     try {
@@ -60,6 +109,7 @@ export const AppProvider = ({ children, authUser, isAuthenticated: authIsAuthent
       setUser(null);
       setSelectedClass(null);
       setBreadcrumbs([]);
+      setSessionExpired(false);
     } catch (error) {
       console.error('Error during logout:', error);
     }
@@ -87,8 +137,10 @@ export const AppProvider = ({ children, authUser, isAuthenticated: authIsAuthent
     user,
     selectedClass,
     breadcrumbs,
+    sessionExpired,
     login,
     logout,
+    handleSessionExpiry,
     selectClass,
     updateBreadcrumbs,
     addBreadcrumb,

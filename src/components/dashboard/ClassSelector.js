@@ -8,7 +8,7 @@ const ClassSelector = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    updateBreadcrumbs(['Class Selector']);
+    updateBreadcrumbs(['Dashboard', "School's AI Management System"]);
   }, [updateBreadcrumbs]);
 
   const availableClasses = [

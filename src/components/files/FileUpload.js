@@ -71,52 +71,54 @@ const FileUpload = ({
 
     console.log('✅ Successfully extracted username:', username);
 
-    // Check category file limit before upload
     try {
-      await s3Service.initializeS3Client(user.id_token);
-      
-      const s3Prefix = s3Service.getS3Prefix(
-        username,
-        classNumber,
-        module,
-        subject,
-        subSection
-      );
-      
-      const limitCheck = await s3Service.checkCategoryFileLimit(s3Prefix);
-      
-      if (limitCheck.isAtLimit) {
-        alert(`Cannot upload more files. This category already contains the maximum of 20 files (${limitCheck.count} files found).`);
-        return;
-      }
-      
-      if (files.length > limitCheck.remaining) {
-        alert(`Cannot upload ${files.length} files. Only ${limitCheck.remaining} more files can be added to this category (current: ${limitCheck.count}/20).`);
-        return;
-      }
-      
-      if (limitCheck.remaining <= 5) {
-        const proceed = window.confirm(`This category currently has ${limitCheck.count} files. You can upload ${limitCheck.remaining} more files before reaching the limit of 20. Do you want to continue?`);
+
+      // Check category file limit before upload
+      try {
+        await s3Service.initializeS3Client(user.id_token);
+        
+        const s3Prefix = s3Service.getS3Prefix(
+          username,
+          classNumber,
+          module,
+          subject,
+          subSection
+        );
+        
+        const limitCheck = await s3Service.checkCategoryFileLimit(s3Prefix);
+        
+        if (limitCheck.isAtLimit) {
+          alert(`Cannot upload more files. This category already contains the maximum of 20 files (${limitCheck.count} files found).`);
+          return;
+        }
+        
+        if (files.length > limitCheck.remaining) {
+          alert(`Cannot upload ${files.length} files. Only ${limitCheck.remaining} more files can be added to this category (current: ${limitCheck.count}/20).`);
+          return;
+        }
+        
+        if (limitCheck.remaining <= 5) {
+          const proceed = window.confirm(`This category currently has ${limitCheck.count} files. You can upload ${limitCheck.remaining} more files before reaching the limit of 20. Do you want to continue?`);
+          if (!proceed) return;
+        }
+        
+      } catch (error) {
+        console.error('Error checking file limits:', error);
+        const proceed = window.confirm('Could not verify file limits. Do you want to continue with the upload?');
         if (!proceed) return;
       }
-      
-    } catch (error) {
-      console.error('Error checking file limits:', error);
-      const proceed = window.confirm('Could not verify file limits. Do you want to continue with the upload?');
-      if (!proceed) return;
-    }
 
-    setIsUploading(true);
-    setUploadResults(null);
-    if (onUploadStart) onUploadStart();
+      setIsUploading(true);
+      setUploadResults(null);
+      if (onUploadStart) onUploadStart();
 
-    try {
-      // Initialize S3 client with user's ID token
-      const idToken = user.id_token;
-      
-      // Debug: Log token information
-      console.log('ID Token exists:', !!idToken);
-      console.log('ID Token preview:', idToken ? idToken.substring(0, 50) + '...' : 'No token');
+      try {
+        // Initialize S3 client with user's ID token
+        const idToken = user.id_token;
+        
+        // Debug: Log token information
+        console.log('ID Token exists:', !!idToken);
+        console.log('ID Token preview:', idToken ? idToken.substring(0, 50) + '...' : 'No token');
       
       // Debug: Try to decode JWT payload for debugging
       if (idToken) {
@@ -166,8 +168,25 @@ const FileUpload = ({
         onUploadComplete(results);
       }
 
+      } catch (uploadError) {
+        console.error('File upload error:', uploadError);
+        throw uploadError; // Re-throw to be handled by outer catch
+      }
+
     } catch (error) {
       console.error('Upload error:', error);
+      
+      let errorMessage = 'Upload failed due to an unexpected error.';
+      
+      // Handle specific AWS SDK chunk loading errors
+      if (error.message && error.message.includes('Loading chunk')) {
+        errorMessage = 'Failed to load AWS upload modules. This may be due to a network issue. Please refresh the page and try again.';
+      } else if (error.message && error.message.includes('AWS SDK modules')) {
+        errorMessage = error.message;
+      }
+      
+      alert(errorMessage);
+      
       setUploadResults({
         results: [],
         summary: { total: files.length, success: 0, errors: files.length }

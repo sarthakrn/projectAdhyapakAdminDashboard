@@ -1,6 +1,48 @@
-import { S3Client, PutObjectCommand, ListObjectsV2Command, DeleteObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
-import { fromCognitoIdentityPool } from "@aws-sdk/credential-provider-cognito-identity";
-import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+// Dynamic imports with retry logic to handle webpack chunk loading issues
+let S3Client, PutObjectCommand, ListObjectsV2Command, DeleteObjectCommand, GetObjectCommand;
+let fromCognitoIdentityPool;
+let getSignedUrl;
+
+const loadAWSModules = async (retryCount = 0) => {
+  const maxRetries = 3;
+  
+  try {
+    if (!S3Client) {
+      console.log("Loading AWS S3 module...");
+      const s3Module = await import("@aws-sdk/client-s3");
+      S3Client = s3Module.S3Client;
+      PutObjectCommand = s3Module.PutObjectCommand;
+      ListObjectsV2Command = s3Module.ListObjectsV2Command;
+      DeleteObjectCommand = s3Module.DeleteObjectCommand;
+      GetObjectCommand = s3Module.GetObjectCommand;
+      console.log("✅ AWS S3 module loaded successfully");
+    }
+    
+    if (!fromCognitoIdentityPool) {
+      console.log("Loading AWS Cognito module...");
+      const cognitoModule = await import("@aws-sdk/credential-provider-cognito-identity");
+      fromCognitoIdentityPool = cognitoModule.fromCognitoIdentityPool;
+      console.log("✅ AWS Cognito module loaded successfully");
+    }
+    
+    if (!getSignedUrl) {
+      console.log("Loading AWS S3 Presigner module...");
+      const presignerModule = await import("@aws-sdk/s3-request-presigner");
+      getSignedUrl = presignerModule.getSignedUrl;
+      console.log("✅ AWS S3 Presigner module loaded successfully");
+    }
+  } catch (error) {
+    console.error(`❌ Failed to load AWS modules (attempt ${retryCount + 1}):`, error);
+    
+    if (retryCount < maxRetries) {
+      console.log(`🔄 Retrying in ${(retryCount + 1) * 1000}ms...`);
+      await new Promise(resolve => setTimeout(resolve, (retryCount + 1) * 1000));
+      return loadAWSModules(retryCount + 1);
+    } else {
+      throw new Error(`Failed to load AWS SDK modules after ${maxRetries} attempts. This may be due to network issues or chunk loading problems. Please refresh the page and try again.`);
+    }
+  }
+};
 
 class S3Service {
   constructor() {
@@ -9,6 +51,35 @@ class S3Service {
     this.identityPoolId = "ap-south-1:56a17246-e497-4430-9763-fcd44122c846";
     this.userPoolId = null; // Will be set dynamically from user token
     this.s3Client = null;
+    this.sessionExpiredCallback = null;
+  }
+
+  // Set callback function to handle session expiry
+  setSessionExpiredCallback(callback) {
+    this.sessionExpiredCallback = callback;
+  }
+
+  // Check if token is expired by examining JWT payload
+  isTokenExpired(token) {
+    try {
+      if (!token) return true;
+      
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      const currentTime = Math.floor(Date.now() / 1000);
+      
+      return payload.exp && payload.exp < currentTime;
+    } catch (error) {
+      console.error('Error checking token expiry:', error);
+      return true;
+    }
+  }
+
+  // Handle token expiry scenarios
+  handleTokenExpiry() {
+    console.warn('S3 Service: Token expired or unauthorized access detected');
+    if (this.sessionExpiredCallback) {
+      this.sessionExpiredCallback();
+    }
   }
 
   // Extract user pool ID from ID token
@@ -43,6 +114,15 @@ class S3Service {
     try {
       console.log("=== S3 CLIENT INITIALIZATION DEBUG ===");
       console.log("1. Input ID Token:", idToken ? `${idToken.substring(0, 50)}...` : "No token provided");
+      
+      // Load AWS modules dynamically
+      await loadAWSModules();
+      
+      // Check token expiry before initialization
+      if (this.isTokenExpired(idToken)) {
+        this.handleTokenExpiry();
+        throw new Error('Token has expired. Please log in again.');
+      }
       
       // Extract user pool ID from token if not already set
       if (!this.userPoolId) {

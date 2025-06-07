@@ -4,14 +4,23 @@ import { useAuth } from 'react-oidc-context';
 import { AppProvider, useApp } from './context/AppContext';
 import Layout from './components/common/Layout';
 import Login from './components/auth/Login';
+import SessionExpiredModal from './components/common/SessionExpiredModal';
+import studentApiService from './services/studentApiService';
+import s3Service from './services/s3Service';
 
+import LandingPage from './components/dashboard/LandingPage';
 import ClassSelector from './components/dashboard/ClassSelector';
+import AIManagementSystem from './components/dashboard/AIManagementSystem';
 import ClassDashboard from './components/dashboard/ClassDashboard';
 import StudentManagement from './components/modules/StudentManagement';
 import Academics from './components/academics/Academics';
 import Subject from './components/academics/Subject';
 import SubModule from './components/academics/SubModule';
 import TermSelection from './components/evaluation/pages/TermSelection';
+import EvaluationLanding from './components/evaluation/pages/EvaluationLanding';
+import EvaluationTermSelection from './components/evaluation/pages/EvaluationTermSelection';
+import EvaluationDashboard from './components/evaluation/pages/EvaluationDashboard';
+import AnswerSheetSubmission from './components/evaluation/pages/AnswerSheetSubmission';
 import TeacherSetup from './components/evaluation/pages/TeacherSetup';
 import StudentList from './components/evaluation/pages/StudentList';
 import ProcessStudentAnswers from './components/evaluation/pages/ProcessStudentAnswers';
@@ -28,7 +37,7 @@ const ProtectedRoute = ({ children }) => {
   useEffect(() => {
     // Prevent going back to login when authenticated
     if (isAuthenticated && (location.pathname === '/login' || location.pathname === '/')) {
-      navigate('/class-selector', { replace: true });
+      navigate('/dashboard', { replace: true });
     }
   }, [isAuthenticated, location.pathname, navigate]);
 
@@ -44,7 +53,7 @@ const NavigationGuard = () => {
   useEffect(() => {
     // Prevent authenticated users from accessing login page
     if (isAuthenticated && (location.pathname === '/login' || location.pathname === '/')) {
-      navigate('/class-selector', { replace: true });
+      navigate('/dashboard', { replace: true });
     }
     
     // Prevent unauthenticated users from accessing protected routes
@@ -57,10 +66,10 @@ const NavigationGuard = () => {
     // Handle browser back/forward button for authenticated users
     if (isAuthenticated) {
       const handlePopState = (event) => {
-        // If trying to go back to login or root, redirect to class selector
+        // If trying to go back to login or root, redirect to dashboard
         if (window.location.pathname === '/login' || window.location.pathname === '/') {
           event.preventDefault();
-          navigate('/class-selector', { replace: true });
+          navigate('/dashboard', { replace: true });
         }
       };
 
@@ -125,15 +134,60 @@ const CompetencyModel = () => {
 };
 
 const AppContent = () => {
+  const { sessionExpired, handleSessionExpiry } = useApp();
+
+  // Set up the session expiry callback for API services
+  useEffect(() => {
+    studentApiService.setSessionExpiredCallback(handleSessionExpiry);
+    s3Service.setSessionExpiredCallback(handleSessionExpiry);
+  }, [handleSessionExpiry]);
+
   return (
     <Router>
       <NavigationGuard />
+      <SessionExpiredModal isVisible={sessionExpired} />
       <Routes>
         {/* Public Routes */}
         <Route path="/login" element={<Login />} />
         <Route path="/" element={<Navigate to="/login" replace />} />
         
         {/* Protected Routes */}
+        <Route path="/dashboard" element={
+          <ProtectedRoute>
+            <LandingPage />
+          </ProtectedRoute>
+        } />
+        
+        <Route path="/ai-management" element={
+          <ProtectedRoute>
+            <AIManagementSystem />
+          </ProtectedRoute>
+        } />
+        
+        <Route path="/evaluation" element={
+          <ProtectedRoute>
+            <EvaluationLanding />
+          </ProtectedRoute>
+        } />
+        
+        <Route path="/evaluation/:classNumber" element={
+          <ProtectedRoute>
+            <EvaluationTermSelection />
+          </ProtectedRoute>
+        } />
+        
+        <Route path="/evaluation/:classNumber/:termId" element={
+          <ProtectedRoute>
+            <EvaluationDashboard />
+          </ProtectedRoute>
+        } />
+        
+        <Route path="/evaluation/:classNumber/:termId/student/:studentId/subject/:subjectId/submit" element={
+          <ProtectedRoute>
+            <AnswerSheetSubmission />
+          </ProtectedRoute>
+        } />
+        
         <Route path="/class-selection" element={
           <ProtectedRoute>
             <ClassSelector />

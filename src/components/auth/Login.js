@@ -10,10 +10,10 @@ const Login = () => {
   const auth = useAuth();
   const navigate = useNavigate();
 
-  // Redirect to class selection if already authenticated
+  // Redirect to dashboard if already authenticated
   useEffect(() => {
     if (auth.isAuthenticated) {
-      navigate('/class-selection');
+      navigate('/dashboard');
     }
   }, [auth.isAuthenticated, navigate]);
 

@@ -2,6 +2,12 @@ class StudentApiService {
   constructor() {
     this.baseUrl = 'https://ab2pkk5ybl.execute-api.ap-south-1.amazonaws.com/dev';
     this.maxBulkSize = 100;
+    this.sessionExpiredCallback = null;
+  }
+
+  // Set callback function to handle session expiry
+  setSessionExpiredCallback(callback) {
+    this.sessionExpiredCallback = callback;
   }
 
   // Get authorization header with ID token
@@ -52,6 +58,69 @@ class StudentApiService {
     return user?.id_token;
   }
 
+  // Check if token is expired by examining JWT payload
+  isTokenExpired(token) {
+    try {
+      if (!token) return true;
+      
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      const currentTime = Math.floor(Date.now() / 1000);
+      
+      return payload.exp && payload.exp < currentTime;
+    } catch (error) {
+      console.error('Error checking token expiry:', error);
+      return true;
+    }
+  }
+
+  // Handle token expiry scenarios
+  handleTokenExpiry(response, error) {
+    const isUnauthorized = response?.status === 401 || response?.status === 403;
+    const isTokenError = error?.message?.toLowerCase().includes('token') || 
+                        error?.message?.toLowerCase().includes('unauthorized') ||
+                        error?.message?.toLowerCase().includes('forbidden');
+
+    if (isUnauthorized || isTokenError) {
+      console.warn('Token expired or unauthorized access detected');
+      if (this.sessionExpiredCallback) {
+        this.sessionExpiredCallback();
+      }
+      return true;
+    }
+    
+    return false;
+  }
+
+  // Enhanced fetch wrapper with token expiry handling
+  async apiRequest(url, options = {}) {
+    try {
+      const response = await fetch(url, options);
+      
+      // Check for unauthorized responses
+      if (response.status === 401 || response.status === 403) {
+        this.handleTokenExpiry(response);
+        return {
+          success: false,
+          error: 'Your session has expired. Please log in again.',
+          status: response.status,
+          sessionExpired: true
+        };
+      }
+      
+      return response;
+    } catch (error) {
+      // Check for network errors that might indicate token issues
+      if (this.handleTokenExpiry(null, error)) {
+        return {
+          success: false,
+          error: 'Your session has expired. Please log in again.',
+          sessionExpired: true
+        };
+      }
+      throw error;
+    }
+  }
+
   // Validate bulk operation size
   validateBulkSize(items, operation) {
     if (items.length > this.maxBulkSize) {
@@ -69,6 +138,16 @@ class StudentApiService {
     try {
       const schoolCode = this.extractSchoolCode(user);
       const idToken = this.extractIdToken(user);
+      
+      // Check token expiry before making request
+      if (this.isTokenExpired(idToken)) {
+        this.handleTokenExpiry();
+        return {
+          success: false,
+          error: 'Your session has expired. Please log in again.',
+          sessionExpired: true
+        };
+      }
       
       let payload;
       
@@ -102,11 +181,16 @@ class StudentApiService {
         };
       }
 
-      const response = await fetch(`${this.baseUrl}/students`, {
+      const response = await this.apiRequest(`${this.baseUrl}/students`, {
         method: 'POST',
         headers: this.getAuthHeaders(idToken),
         body: JSON.stringify(payload)
       });
+
+      // Check if response indicates session expiry
+      if (response.sessionExpired) {
+        return response;
+      }
 
       const responseData = await response.json();
 
@@ -140,15 +224,31 @@ class StudentApiService {
       const idToken = this.extractIdToken(user);
       const formattedClassName = this.formatClassName(className);
       
+      // Check token expiry before making request
+      if (this.isTokenExpired(idToken)) {
+        this.handleTokenExpiry();
+        return {
+          success: false,
+          error: 'Your session has expired. Please log in again.',
+          sessionExpired: true,
+          students: []
+        };
+      }
+      
       const params = new URLSearchParams({
         schoolCode,
         className: formattedClassName
       });
 
-      const response = await fetch(`${this.baseUrl}/students?${params}`, {
+      const response = await this.apiRequest(`${this.baseUrl}/students?${params}`, {
         method: 'GET',
         headers: this.getAuthHeaders(idToken)
       });
+
+      // Check if response indicates session expiry
+      if (response.sessionExpired) {
+        return { ...response, students: [] };
+      }
 
       const responseData = await response.json();
 
@@ -180,6 +280,16 @@ class StudentApiService {
     try {
       const schoolCode = this.extractSchoolCode(user);
       const idToken = this.extractIdToken(user);
+      
+      // Check token expiry before making request
+      if (this.isTokenExpired(idToken)) {
+        this.handleTokenExpiry();
+        return {
+          success: false,
+          error: 'Your session has expired. Please log in again.',
+          sessionExpired: true
+        };
+      }
       
       let payload;
 
@@ -217,11 +327,16 @@ class StudentApiService {
         };
       }
 
-      const response = await fetch(`${this.baseUrl}/students`, {
+      const response = await this.apiRequest(`${this.baseUrl}/students`, {
         method: 'PUT',
         headers: this.getAuthHeaders(idToken),
         body: JSON.stringify(payload)
       });
+
+      // Check if response indicates session expiry
+      if (response.sessionExpired) {
+        return response;
+      }
 
       const responseData = await response.json();
 
@@ -254,6 +369,16 @@ class StudentApiService {
       const schoolCode = this.extractSchoolCode(user);
       const idToken = this.extractIdToken(user);
       
+      // Check token expiry before making request
+      if (this.isTokenExpired(idToken)) {
+        this.handleTokenExpiry();
+        return {
+          success: false,
+          error: 'Your session has expired. Please log in again.',
+          sessionExpired: true
+        };
+      }
+      
       let payload;
 
       if (Array.isArray(deletionsData)) {
@@ -274,11 +399,16 @@ class StudentApiService {
         };
       }
 
-      const response = await fetch(`${this.baseUrl}/students`, {
+      const response = await this.apiRequest(`${this.baseUrl}/students`, {
         method: 'DELETE',
         headers: this.getAuthHeaders(idToken),
         body: JSON.stringify(payload)
       });
+
+      // Check if response indicates session expiry
+      if (response.sessionExpired) {
+        return response;
+      }
 
       const responseData = await response.json();
 
