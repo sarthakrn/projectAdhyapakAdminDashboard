@@ -86,7 +86,7 @@ const StudentManagement = () => {
 
   useEffect(() => {
     const cleanClassNumber = classNumber.replace('class-', '');
-    updateBreadcrumbs(['Class Selector', `Class${cleanClassNumber}`, 'Student Management']);
+    updateBreadcrumbs(['Dashboard', "School's AI Management System", `Class ${cleanClassNumber}`, 'Student Management']);
   }, [classNumber, updateBreadcrumbs]);
 
   useEffect(() => {

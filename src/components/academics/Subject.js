@@ -14,7 +14,7 @@ const Subject = () => {
       .map(word => word.charAt(0).toUpperCase() + word.slice(1))
       .join(' ');
     const cleanClassNumber = classNumber.replace('class-', '');
-    updateBreadcrumbs(['Class Selector', `Class${cleanClassNumber}`, 'Academics', subjectName]);
+    updateBreadcrumbs(['Dashboard', "School's AI Management System", `Class ${cleanClassNumber}`, 'Academics', subjectName]);
   }, [classNumber, subject, updateBreadcrumbs]);
 
   const subjectName = subject

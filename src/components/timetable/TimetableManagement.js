@@ -9,7 +9,7 @@ const TimetableManagement = () => {
 
   useEffect(() => {
     const cleanClassNumber = classNumber.replace('class-', '');
-    updateBreadcrumbs(['Class Selector', `Class${cleanClassNumber}`, 'Timetable Management']);
+    updateBreadcrumbs(['Dashboard', "School's AI Management System", `Class ${cleanClassNumber}`, 'Timetable Management']);
   }, [classNumber, updateBreadcrumbs]);
 
   const cleanClassNumber = classNumber.replace('class-', '');

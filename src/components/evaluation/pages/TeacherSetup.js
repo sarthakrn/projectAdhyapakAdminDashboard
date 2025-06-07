@@ -26,7 +26,7 @@ const TeacherSetup = () => {
       .join(' ');
     const cleanClassNumber = classNumber.replace('class-', '');
     const termName = termId.charAt(0).toUpperCase() + termId.slice(1);
-    updateBreadcrumbs(['Class Selector', `Class${cleanClassNumber}`, 'Academics', subjectName, 'Evaluation', termName]);
+    updateBreadcrumbs(['Dashboard', "School's AI Management System", `Class ${cleanClassNumber}`, 'Academics', subjectName, 'Evaluation', termName]);
   }, [classNumber, subject, termId, updateBreadcrumbs]);
 
   const subjectName = subject

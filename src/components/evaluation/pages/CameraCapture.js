@@ -49,8 +49,9 @@ const CameraCapture = () => {
             const termName = termId.charAt(0).toUpperCase() + termId.slice(1);
             
             updateBreadcrumbs([
-              'Class Selector', 
-              `Class${cleanClassNumber}`, 
+              'Dashboard', 
+              "School's AI Management System",
+              `Class ${cleanClassNumber}`, 
               'Academics', 
               subjectName, 
               'Evaluation', 

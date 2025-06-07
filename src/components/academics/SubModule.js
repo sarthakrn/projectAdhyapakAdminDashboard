@@ -20,7 +20,7 @@ const SubModule = () => {
       .join(' ');
 
     const cleanClassNumber = classNumber.replace('class-', '');
-    updateBreadcrumbs(['Class Selector', `Class${cleanClassNumber}`, 'Academics', subjectName, subModuleName]);
+    updateBreadcrumbs(['Dashboard', "School's AI Management System", `Class ${cleanClassNumber}`, 'Academics', subjectName, subModuleName]);
   }, [classNumber, subject, subModule, updateBreadcrumbs]);
 
   const subjectName = subject

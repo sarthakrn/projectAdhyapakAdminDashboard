@@ -88,7 +88,7 @@ const Notifications = () => {
   const { updateBreadcrumbs } = useApp();
 
   useEffect(() => {
-    updateBreadcrumbs(['Class Selector', 'Notifications']);
+    updateBreadcrumbs(['Dashboard', "School's AI Management System", 'Notifications']);
   }, [updateBreadcrumbs]);
 
   return (
@@ -103,7 +103,7 @@ const HolidayCalendar = () => {
   const { updateBreadcrumbs } = useApp();
 
   useEffect(() => {
-    updateBreadcrumbs(['Class Selector', 'Holiday Calendar']);
+    updateBreadcrumbs(['Dashboard', "School's AI Management System", 'Holiday Calendar']);
   }, [updateBreadcrumbs]);
 
   return (
@@ -121,7 +121,7 @@ const CompetencyModel = () => {
   useEffect(() => {
     if (classNumber) {
       const cleanClassNumber = classNumber.replace('class-', '');
-      updateBreadcrumbs(['Class Selector', `Class${cleanClassNumber}`, "School's Competency Model"]);
+      updateBreadcrumbs(['Dashboard', "School's AI Management System", `Class ${cleanClassNumber}`, "School's Competency Model"]);
     }
   }, [classNumber, updateBreadcrumbs]);
 

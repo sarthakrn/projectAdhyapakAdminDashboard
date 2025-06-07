@@ -28,10 +28,6 @@ const Breadcrumb = () => {
       } else if (secondCrumb === "School's AI Management System") {
         // Navigate to AI management system page
         navigate('/ai-management');
-      } else if (secondCrumb && secondCrumb.startsWith('Class')) {
-        // Handle direct class navigation (legacy support)
-        const classNum = secondCrumb.replace('Class', '').replace(' ', '');
-        navigate(`/class-selector/class-${classNum}`);
       }
     } else if (index === 2) {
       const thirdCrumb = breadcrumbs[2];
@@ -44,13 +40,23 @@ const Breadcrumb = () => {
         // AI Management flow: Navigate to class dashboard
         const classNum = thirdCrumb.replace('Class', '').replace(' ', '');
         navigate(`/class-selector/class-${classNum}`);
-      } else if (breadcrumbs[1] && breadcrumbs[1].startsWith('Class')) {
-        // Handle module navigation in AI management flow
-        const classBreadcrumb = breadcrumbs[1];
-        const moduleName = thirdCrumb;
+      }
+    } else if (index === 3) {
+      const fourthCrumb = breadcrumbs[3];
+      
+      if (isEvaluationFlow && fourthCrumb && fourthCrumb.startsWith('Term')) {
+        // Evaluation flow: Navigate to evaluation dashboard
+        const classCrumb = breadcrumbs[2];
+        const classNum = classCrumb.replace('Class', '').replace(' ', '');
+        const termNum = fourthCrumb.replace('Term', '').replace(' ', '').toLowerCase();
+        navigate(`/evaluation/class-${classNum}/term${termNum}`);
+      } else if (isAIManagementFlow) {
+        // AI Management flow: Handle module navigation
+        const classCrumb = breadcrumbs[2];
+        const moduleName = fourthCrumb;
         
-        if (classBreadcrumb && classBreadcrumb.startsWith('Class')) {
-          const classNum = classBreadcrumb.replace('Class', '').replace(' ', '');
+        if (classCrumb && classCrumb.startsWith('Class')) {
+          const classNum = classCrumb.replace('Class', '').replace(' ', '');
           let moduleRoute = '';
           
           switch (moduleName) {
@@ -80,24 +86,14 @@ const Breadcrumb = () => {
           navigate(`/class-selector/class-${classNum}/${moduleRoute}`);
         }
       }
-    } else if (index === 3) {
-      const fourthCrumb = breadcrumbs[3];
+    } else if (index === 4 && isAIManagementFlow && breadcrumbs[3] === 'Academics') {
+      // AI Management flow: Navigate to subject page
+      const classCrumb = breadcrumbs[2];
+      const subjectName = breadcrumbs[4].toLowerCase().replace(/\s+/g, '-');
       
-      if (isEvaluationFlow && fourthCrumb && fourthCrumb.startsWith('Term')) {
-        // Evaluation flow: Navigate to evaluation dashboard
-        const classCrumb = breadcrumbs[2];
+      if (classCrumb && classCrumb.startsWith('Class')) {
         const classNum = classCrumb.replace('Class', '').replace(' ', '');
-        const termNum = fourthCrumb.replace('Term', '').replace(' ', '').toLowerCase();
-        navigate(`/evaluation/class-${classNum}/term${termNum}`);
-      } else if (isAIManagementFlow && breadcrumbs[2] === 'Academics') {
-        // AI Management flow: Navigate to subject page
-        const classBreadcrumb = breadcrumbs[1];
-        const subjectName = fourthCrumb.toLowerCase().replace(/\s+/g, '-');
-        
-        if (classBreadcrumb && classBreadcrumb.startsWith('Class')) {
-          const classNum = classBreadcrumb.replace('Class', '').replace(' ', '');
-          navigate(`/class-selector/class-${classNum}/academics/${subjectName}`);
-        }
+        navigate(`/class-selector/class-${classNum}/academics/${subjectName}`);
       }
     }
   };

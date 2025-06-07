@@ -12,7 +12,7 @@ const ClassDashboard = () => {
     if (classNumber) {
       const cleanClassNumber = classNumber.replace('class-', '');
       selectClass(cleanClassNumber);
-      updateBreadcrumbs(['Class Selector', `Class${cleanClassNumber}`]);
+      updateBreadcrumbs(['Dashboard', "School's AI Management System", `Class ${cleanClassNumber}`]);
     }
   }, [classNumber, selectClass, updateBreadcrumbs]);
 

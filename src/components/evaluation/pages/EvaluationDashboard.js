@@ -15,6 +15,7 @@ const EvaluationDashboard = () => {
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [optedOutStudents, setOptedOutStudents] = useState(new Set());
 
   useEffect(() => {
     const cleanClassNumber = classNumber.replace('class-', '');
@@ -77,7 +78,31 @@ const EvaluationDashboard = () => {
   };
 
   const handleStartEvaluation = (studentId, subjectId) => {
-    navigate(`/evaluation/${classNumber}/${termId}/student/${studentId}/subject/${subjectId}/submit`);
+    // Create a hidden file input and trigger it
+    const fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.accept = '.pdf';
+    fileInput.style.display = 'none';
+    
+    fileInput.onchange = (event) => {
+      const file = event.target.files[0];
+      if (file) {
+        // Check file size (20MB limit)
+        const maxSize = 20 * 1024 * 1024; // 20MB in bytes
+        if (file.size > maxSize) {
+          alert('File size exceeds 20MB limit. Please select a smaller file.');
+          return;
+        }
+        
+        // TODO: Handle file upload processing here
+        console.log('Selected file:', file.name, 'Size:', (file.size / 1024 / 1024).toFixed(2) + 'MB');
+        alert(`File "${file.name}" selected successfully. Upload processing will be implemented.`);
+      }
+    };
+    
+    document.body.appendChild(fileInput);
+    fileInput.click();
+    document.body.removeChild(fileInput);
   };
 
   const isEvaluationEnabled = (subjectId) => {
@@ -89,6 +114,18 @@ const EvaluationDashboard = () => {
     return evaluations[key];
   };
 
+  const handleOptOut = (studentId) => {
+    setOptedOutStudents(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(studentId)) {
+        newSet.delete(studentId);
+      } else {
+        newSet.add(studentId);
+      }
+      return newSet;
+    });
+  };
+
   const cleanClassNumber = classNumber.replace('class-', '');
   const termName = `Term ${termId.replace('term', '')}`;
 
@@ -96,14 +133,6 @@ const EvaluationDashboard = () => {
   if (loading) {
     return (
       <div className="evaluation-dashboard-container">
-        <div className="evaluation-dashboard-header">
-          <h1 className="evaluation-dashboard-title">
-            Class {cleanClassNumber} - {termName} Evaluation
-          </h1>
-          <p className="evaluation-dashboard-subtitle">
-            Loading student data...
-          </p>
-        </div>
         <div className="evaluation-loading">
           <div className="loading-spinner"></div>
           <p className="loading-text">Fetching students for evaluation...</p>
@@ -116,14 +145,6 @@ const EvaluationDashboard = () => {
   if (!loading && students.length === 0) {
     return (
       <div className="evaluation-dashboard-container">
-        <div className="evaluation-dashboard-header">
-          <h1 className="evaluation-dashboard-title">
-            Class {cleanClassNumber} - {termName} Evaluation
-          </h1>
-          <p className="evaluation-dashboard-subtitle">
-            No students available for evaluation
-          </p>
-        </div>
         <div className="evaluation-empty-state">
           <div className="empty-state-icon">👥</div>
           <h3 className="empty-state-title">No Students Found</h3>
@@ -145,14 +166,6 @@ const EvaluationDashboard = () => {
   if (error) {
     return (
       <div className="evaluation-dashboard-container">
-        <div className="evaluation-dashboard-header">
-          <h1 className="evaluation-dashboard-title">
-            Class {cleanClassNumber} - {termName} Evaluation
-          </h1>
-          <p className="evaluation-dashboard-subtitle">
-            Error loading student data
-          </p>
-        </div>
         <div className="evaluation-error-state">
           <div className="error-state-icon">⚠️</div>
           <h3 className="error-state-title">Error Loading Students</h3>
@@ -171,35 +184,23 @@ const EvaluationDashboard = () => {
   return (
     <div className="evaluation-dashboard-container">
       <div className="evaluation-dashboard-header">
-        <h1 className="evaluation-dashboard-title">
-          Class {cleanClassNumber} - {termName} Evaluation
-        </h1>
-        <p className="evaluation-dashboard-subtitle">
-          Manage student evaluations and assessments for the selected class and term ({students.length} students)
-        </p>
+        <button 
+          className="ai-report-btn disabled"
+          disabled={true}
+          title="Will be enabled after all evaluations are complete"
+        >
+          📊 AI Report
+        </button>
       </div>
 
-      <div className="evaluation-info">
-        <div className="info-cards-grid">
-          <div className="info-card">
-            <div className="info-icon">📋</div>
-            <div className="info-content">
-              <h4 className="info-title">Prerequisites</h4>
-              <p className="info-description">
-                Upload marking schemes and set maximum marks for each subject before starting evaluations
-              </p>
-            </div>
-          </div>
-          <div className="info-card">
-            <div className="info-icon">🤖</div>
-            <div className="info-content">
-              <h4 className="info-title">AI Assessment</h4>
-              <p className="info-description">
-                AI will automatically grade answer sheets with teacher verification and override capability
-              </p>
-            </div>
-          </div>
-        </div>
+      <div className="evaluation-instructions">
+        <h3 className="instructions-title">Evaluation Process</h3>
+        <ol className="instructions-list">
+          <li>Upload the Marking Scheme and set the Maximum Marks for each subject.</li>
+          <li>For each student, click "Start Evaluation" to upload their answer sheet. The AI will then perform the initial grading.</li>
+          <li>After AI evaluation, the teacher must review the results for each student, verify them, and submit the final grade.</li>
+          <li>Once all evaluations are finalized, click the "AI Report" button to generate a comprehensive report, which will be published to students, create personalized practice questions, and update the school's knowledge graph.</li>
+        </ol>
       </div>
 
       <div className="evaluation-table-container">
@@ -207,6 +208,7 @@ const EvaluationDashboard = () => {
           <table className="evaluation-table">
             <thead>
               <tr className="table-header-row">
+                <th className="opt-out-header">Opt-Out</th>
                 <th className="student-info-header">Roll No.</th>
                 <th className="student-info-header">First Name</th>
                 <th className="student-info-header">Section</th>
@@ -246,11 +248,22 @@ const EvaluationDashboard = () => {
               </tr>
             </thead>
             <tbody>
-              {students.map(student => (
-                <tr key={student.id} className="student-row">
-                  <td className="student-info-cell">{student.rollNumber}</td>
-                  <td className="student-info-cell">{student.firstName || student.name}</td>
-                  <td className="student-info-cell">{student.section}</td>
+              {students.map(student => {
+                const isOptedOut = optedOutStudents.has(student.id);
+                return (
+                  <tr key={student.id} className={`student-row ${isOptedOut ? 'opted-out' : ''}`}>
+                    <td className="opt-out-cell">
+                      <button
+                        className={`opt-out-btn ${isOptedOut ? 'active' : ''}`}
+                        onClick={() => handleOptOut(student.id)}
+                        title={isOptedOut ? 'Include in evaluation' : 'Exclude from evaluation'}
+                      >
+                        {isOptedOut ? '↩️' : '❌'}
+                      </button>
+                    </td>
+                    <td className="student-info-cell">{student.rollNumber}</td>
+                    <td className="student-info-cell">{student.firstName || student.name}</td>
+                    <td className="student-info-cell">{student.section}</td>
                   {subjects.map(subject => {
                     const evaluationStatus = getEvaluationStatus(student.id, subject.id);
                     const isEnabled = isEvaluationEnabled(subject.id);
@@ -276,10 +289,11 @@ const EvaluationDashboard = () => {
                         )}
                       </td>
                     );
-                  })}
-                </tr>
-              ))}
-            </tbody>
+                    })}
+                  </tr>
+                );
+                })}
+              </tbody>
           </table>
         </div>
       </div>

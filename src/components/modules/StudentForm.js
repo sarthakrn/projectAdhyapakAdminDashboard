@@ -18,7 +18,7 @@ const StudentForm = () => {
 
   useEffect(() => {
     const cleanClassNumber = classNumber.replace('class-', '');
-    updateBreadcrumbs(['Class Selector', `Class${cleanClassNumber}`, 'Bulk Operations']);
+    updateBreadcrumbs(['Dashboard', "School's AI Management System", `Class ${cleanClassNumber}`, 'Bulk Operations']);
   }, [classNumber, updateBreadcrumbs]);
 
   const clearMessages = () => {
