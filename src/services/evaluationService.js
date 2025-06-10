@@ -1,7 +1,9 @@
 class EvaluationService {
   constructor() {
-    // We'll import studentApiService dynamically to avoid circular dependencies
+    // We'll import services dynamically to avoid circular dependencies
     this.studentApiService = null;
+    this.s3Service = null;
+    this.evaluationApiService = null;
   }
 
   async getStudentApiService() {
@@ -10,6 +12,22 @@ class EvaluationService {
       this.studentApiService = studentApiService;
     }
     return this.studentApiService;
+  }
+
+  async getS3Service() {
+    if (!this.s3Service) {
+      const { default: s3Service } = await import('./s3Service');
+      this.s3Service = s3Service;
+    }
+    return this.s3Service;
+  }
+
+  async getEvaluationApiService() {
+    if (!this.evaluationApiService) {
+      const { default: evaluationApiService } = await import('./evaluationApiService');
+      this.evaluationApiService = evaluationApiService;
+    }
+    return this.evaluationApiService;
   }
 
   // Fetch students for evaluation from the backend
@@ -216,6 +234,265 @@ class EvaluationService {
       isValid: errors.length === 0,
       errors
     };
+  }
+
+  // Generate S3 path for evaluation based on breadcrumbs
+  generateEvaluationS3Path(breadcrumbs, subjectName, folder) {
+    try {
+      const s3Service = this.s3Service;
+      if (!s3Service) {
+        throw new Error('S3 service not initialized');
+      }
+      
+      // Transform breadcrumbs to S3 path, then append subject and folder
+      const basePath = s3Service.transformBreadcrumbsToS3Path(breadcrumbs);
+      return `${basePath}/${subjectName}/${folder}`;
+    } catch (error) {
+      console.error('Error generating S3 path:', error);
+      throw error;
+    }
+  }
+
+  // Upload marking scheme for a subject
+  async uploadMarkingScheme(file, breadcrumbs, subjectName, studentUsernames, user) {
+    try {
+      const s3Service = await this.getS3Service();
+      const evaluationApiService = await this.getEvaluationApiService();
+
+      // Initialize services
+      await s3Service.initializeS3Client(user.id_token);
+
+      // Extract username from user
+      const username = user?.profile?.preferred_username || 
+                      user?.profile?.username || 
+                      user?.profile?.['cognito:username'] ||
+                      user?.preferred_username ||
+                      user?.username ||
+                      user?.sub;
+
+      if (!username) {
+        throw new Error('Could not extract username from user object');
+      }
+
+      // Generate S3 path for marking scheme
+      const s3Path = this.generateEvaluationS3Path(breadcrumbs, subjectName, 'MarkingScheme');
+      const s3Key = `${username}/${s3Path}/${file.name}`;
+
+      // Upload file to S3
+      const uploadResult = await s3Service.uploadFile(file, s3Key);
+      
+      if (!uploadResult.success) {
+        throw new Error(uploadResult.error || 'Failed to upload file to S3');
+      }
+
+      // Extract term name from breadcrumbs
+      const termName = breadcrumbs.find(crumb => crumb.toLowerCase().includes('term'));
+      if (!termName) {
+        throw new Error('Could not extract term name from breadcrumbs');
+      }
+
+      // Update marking scheme metadata via API Gateway
+      const apiResult = await evaluationApiService.updateMarkingScheme(
+        termName,
+        subjectName,
+        uploadResult.location || `s3://${s3Service.bucketName}/${s3Key}`,
+        studentUsernames,
+        user
+      );
+
+      if (!apiResult.success) {
+        throw new Error(apiResult.error || 'Failed to update marking scheme metadata');
+      }
+
+      return {
+        success: true,
+        s3Key,
+        s3Url: uploadResult.location,
+        apiUpdateResult: apiResult,
+        message: `Marking scheme uploaded successfully for ${studentUsernames.length} students`
+      };
+
+    } catch (error) {
+      console.error('Error uploading marking scheme:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to upload marking scheme'
+      };
+    }
+  }
+
+  // Upload marking scheme for a subject with maximum marks
+  async uploadMarkingSchemeWithMaxMarks(file, breadcrumbs, subjectName, studentUsernames, maximumMarks, user) {
+    try {
+      const s3Service = await this.getS3Service();
+      const evaluationApiService = await this.getEvaluationApiService();
+
+      // Initialize services
+      await s3Service.initializeS3Client(user.id_token);
+
+      // Extract username from user
+      const username = user?.profile?.preferred_username || 
+                      user?.profile?.username || 
+                      user?.profile?.['cognito:username'] ||
+                      user?.preferred_username ||
+                      user?.username ||
+                      user?.sub;
+
+      if (!username) {
+        throw new Error('Could not extract username from user object');
+      }
+
+      // Validate maximum marks and ensure it's a proper number
+      const numericMaxMarks = Number(maximumMarks);
+      if (!maximumMarks || isNaN(numericMaxMarks) || numericMaxMarks <= 0) {
+        throw new Error('Valid maximum marks are required');
+      }
+      
+      // Round to avoid floating point precision issues that could cause Decimal storage
+      const roundedMaxMarks = Math.round(numericMaxMarks * 100) / 100;
+
+      // Generate S3 path for marking scheme
+      const s3Path = this.generateEvaluationS3Path(breadcrumbs, subjectName, 'MarkingScheme');
+      const s3Key = `${username}/${s3Path}/${file.name}`;
+
+      // Upload file to S3
+      const uploadResult = await s3Service.uploadFile(file, s3Key);
+      
+      if (!uploadResult.success) {
+        throw new Error(uploadResult.error || 'Failed to upload file to S3');
+      }
+
+      // Extract term name from breadcrumbs
+      const termName = breadcrumbs.find(crumb => crumb.toLowerCase().includes('term'));
+      if (!termName) {
+        throw new Error('Could not extract term name from breadcrumbs');
+      }
+
+      // Update marking scheme metadata via API Gateway with maximum marks
+      const apiResult = await evaluationApiService.updateMarkingSchemeWithMaxMarks(
+        termName,
+        subjectName,
+        uploadResult.location || `s3://${s3Service.bucketName}/${s3Key}`,
+        roundedMaxMarks,
+        studentUsernames,
+        user
+      );
+
+      if (!apiResult.success) {
+        throw new Error(apiResult.error || 'Failed to update marking scheme metadata');
+      }
+
+      return {
+        success: true,
+        s3Key,
+        s3Url: uploadResult.location,
+        apiUpdateResult: apiResult,
+        message: `Marking scheme uploaded successfully for ${studentUsernames.length} students with maximum marks: ${roundedMaxMarks}`
+      };
+
+    } catch (error) {
+      console.error('Error uploading marking scheme with maximum marks:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to upload marking scheme'
+      };
+    }
+  }
+
+  // Upload answer sheet for a student
+  async uploadAnswerSheet(file, breadcrumbs, subjectName, studentUsername, user) {
+    try {
+      const s3Service = await this.getS3Service();
+      const evaluationApiService = await this.getEvaluationApiService();
+
+      // Initialize services
+      await s3Service.initializeS3Client(user.id_token);
+
+      // Extract username from user (teacher/admin)
+      const teacherUsername = user?.profile?.preferred_username || 
+                             user?.profile?.username || 
+                             user?.profile?.['cognito:username'] ||
+                             user?.preferred_username ||
+                             user?.username ||
+                             user?.sub;
+
+      if (!teacherUsername) {
+        throw new Error('Could not extract username from user object');
+      }
+
+      // Validate file size (20MB limit)
+      const maxSize = 20 * 1024 * 1024; // 20MB
+      if (file.size > maxSize) {
+        throw new Error('File size exceeds 20MB limit');
+      }
+
+      // Generate S3 path for answer sheet
+      const s3Path = this.generateEvaluationS3Path(breadcrumbs, subjectName, 'AnswerSheet');
+      const fileName = `${studentUsername}.pdf`;
+      const s3Key = `${teacherUsername}/${s3Path}/${fileName}`;
+
+      // Upload file to S3
+      const uploadResult = await s3Service.uploadFile(file, s3Key);
+      
+      if (!uploadResult.success) {
+        throw new Error(uploadResult.error || 'Failed to upload file to S3');
+      }
+
+      // Extract term name from breadcrumbs
+      const termName = breadcrumbs.find(crumb => crumb.toLowerCase().includes('term'));
+      if (!termName) {
+        throw new Error('Could not extract term name from breadcrumbs');
+      }
+
+      // Update answer sheet metadata via API Gateway
+      const apiResult = await evaluationApiService.updateAnswerSheet(
+        studentUsername,
+        termName,
+        subjectName,
+        uploadResult.location || `s3://${s3Service.bucketName}/${s3Key}`,
+        user
+      );
+
+      if (!apiResult.success) {
+        throw new Error(apiResult.error || 'Failed to update answer sheet metadata');
+      }
+
+      return {
+        success: true,
+        s3Key,
+        s3Url: uploadResult.location,
+        apiUpdateResult: apiResult,
+        message: `Answer sheet uploaded successfully for student ${studentUsername}`
+      };
+
+    } catch (error) {
+      console.error('Error uploading answer sheet:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to upload answer sheet'
+      };
+    }
+  }
+
+  // Get student evaluation metadata (placeholder for future API implementation)
+  async getStudentEvaluationData(studentUsername, breadcrumbs, subjectName, user) {
+    try {
+      // Note: This functionality would need a corresponding API endpoint
+      // For now, return a placeholder response
+      console.warn('getStudentEvaluationData: API endpoint not yet implemented');
+      
+      return {
+        success: false,
+        error: 'This functionality requires an API endpoint implementation'
+      };
+
+    } catch (error) {
+      console.error('Error getting student evaluation data:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to get evaluation data'
+      };
+    }
   }
 
   // Export evaluation data (for future use)

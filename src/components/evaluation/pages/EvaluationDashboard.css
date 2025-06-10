@@ -220,8 +220,15 @@
   width: 100%;
 }
 
-.marks-input {
+.marks-input-wrapper {
+  display: flex;
+  gap: 4px;
+  align-items: center;
   width: 100%;
+}
+
+.marks-input {
+  flex: 1;
   padding: 8px 10px;
   background: rgba(255, 255, 255, 0.15);
   backdrop-filter: blur(10px);
@@ -244,6 +251,64 @@
   background: rgba(255, 255, 255, 0.2);
   border-color: rgba(255, 255, 255, 0.4);
   box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.1);
+}
+
+.save-marks-btn {
+  padding: 8px 10px;
+  background: rgba(40, 167, 69, 0.7);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  color: white;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  height: 32px;
+}
+
+.save-marks-btn:hover:not(:disabled) {
+  background: rgba(40, 167, 69, 0.9);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.save-marks-btn:disabled {
+  background: rgba(108, 117, 125, 0.5);
+  color: rgba(255, 255, 255, 0.5);
+  cursor: not-allowed;
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.save-marks-btn.saved {
+  background: rgba(40, 167, 69, 0.9);
+  color: rgba(255, 255, 255, 0.95);
+}
+
+.saved-marks-indicator {
+  font-size: 10px;
+  color: rgba(40, 167, 69, 0.9);
+  text-align: center;
+  margin-top: 4px;
+  font-weight: 600;
+}
+
+.error-message {
+  font-size: 10px;
+  color: rgba(220, 53, 69, 0.9);
+  text-align: center;
+  margin-top: 6px;
+  padding: 4px 6px;
+  background: rgba(220, 53, 69, 0.1);
+  border: 1px solid rgba(220, 53, 69, 0.3);
+  border-radius: 4px;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 
 .student-row {
@@ -377,7 +442,64 @@
   background: rgba(40, 167, 69, 0.8);
 }
 
+.upload-button.uploading {
+  background: rgba(253, 126, 20, 0.6);
+  color: rgba(255, 255, 255, 0.8);
+  cursor: not-allowed;
+  animation: pulse 1.5s ease-in-out infinite;
+}
 
+.upload-button.disabled {
+  background: rgba(108, 117, 125, 0.4);
+  color: rgba(255, 255, 255, 0.5);
+  cursor: not-allowed;
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.upload-button.disabled:hover {
+  background: rgba(108, 117, 125, 0.4);
+  transform: none;
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.answer-sheet-uploaded {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 8px;
+  background: rgba(40, 167, 69, 0.15);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(40, 167, 69, 0.3);
+  border-radius: 8px;
+}
+
+.upload-success {
+  color: rgba(40, 167, 69, 0.9);
+  font-size: 11px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.upload-time {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 9px;
+  text-align: center;
+  font-weight: 400;
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+  100% {
+    opacity: 1;
+  }
+}
 
 @keyframes fadeInUp {
   from {
@@ -408,6 +530,18 @@
   .marks-input {
     font-size: 11px;
     padding: 6px 8px;
+  }
+  
+  .save-marks-btn {
+    font-size: 11px;
+    padding: 6px 8px;
+    min-width: 28px;
+    height: 28px;
+  }
+  
+  .saved-marks-indicator,
+  .error-message {
+    font-size: 9px;
   }
   
   .ai-report-btn {
@@ -462,6 +596,18 @@
   .marks-input {
     font-size: 10px;
     padding: 5px 6px;
+  }
+  
+  .save-marks-btn {
+    font-size: 10px;
+    padding: 5px 6px;
+    min-width: 26px;
+    height: 26px;
+  }
+  
+  .saved-marks-indicator,
+  .error-message {
+    font-size: 8px;
   }
   
   .student-info-cell,
@@ -549,6 +695,18 @@
   .marks-input {
     font-size: 9px;
     padding: 4px 5px;
+  }
+  
+  .save-marks-btn {
+    font-size: 9px;
+    padding: 4px 5px;
+    min-width: 24px;
+    height: 24px;
+  }
+  
+  .saved-marks-indicator,
+  .error-message {
+    font-size: 7px;
   }
   
   .student-info-cell,

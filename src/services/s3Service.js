@@ -303,8 +303,59 @@ class S3Service {
     return classNumber;
   }
 
-  // Construct S3 key path
-  constructS3Key(username, classNumber, module, subject, subSection, filename) {
+  // Transform breadcrumb text to S3-compliant segment
+  breadcrumbToS3Segment(breadcrumb) {
+    if (!breadcrumb || typeof breadcrumb !== 'string') {
+      return '';
+    }
+    
+    return breadcrumb
+      // Remove special characters like apostrophes
+      .replace(/['']/g, '')
+      // Split by spaces and capitalize each word
+      .split(' ')
+      .map(word => {
+        // Preserve common acronyms (all uppercase, 2-4 characters)
+        if (word.length >= 2 && word.length <= 4 && word === word.toUpperCase()) {
+          return word;
+        }
+        // Regular PascalCase transformation
+        return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+      })
+      // Join without spaces (PascalCase)
+      .join('');
+  }
+
+  // Transform breadcrumbs array to S3 path (excluding username and Dashboard)
+  transformBreadcrumbsToS3Path(breadcrumbs) {
+    if (!breadcrumbs || !Array.isArray(breadcrumbs) || breadcrumbs.length === 0) {
+      return '';
+    }
+    
+    // Skip "Dashboard" breadcrumb (first item) and transform the rest
+    const pathSegments = breadcrumbs
+      .slice(1) // Skip Dashboard
+      .map(breadcrumb => this.breadcrumbToS3Segment(breadcrumb))
+      .filter(segment => segment.length > 0);
+    
+    return pathSegments.join('/');
+  }
+
+  // Construct S3 key path using breadcrumbs
+  constructS3Key(username, breadcrumbs, filename) {
+    const sanitizedFilename = this.sanitizeFilename(filename);
+    const s3Path = this.transformBreadcrumbsToS3Path(breadcrumbs);
+    
+    if (!s3Path) {
+      // Fallback to old behavior if breadcrumbs are not available
+      throw new Error('Breadcrumbs are required for S3 path generation');
+    }
+    
+    return `${username}/${s3Path}/${sanitizedFilename}`;
+  }
+
+  // Legacy method for backward compatibility - deprecated
+  constructS3KeyLegacy(username, classNumber, module, subject, subSection, filename) {
     const sanitizedFilename = this.sanitizeFilename(filename);
     const cleanClass = this.cleanClassNumber(classNumber);
     
@@ -596,8 +647,20 @@ class S3Service {
     return typeMap[extension] || 'Unknown';
   }
 
-  // Get S3 prefix for listing files
-  getS3Prefix(username, classNumber, module, subject = null, subSection = null) {
+  // Get S3 prefix for listing files using breadcrumbs
+  getS3Prefix(username, breadcrumbs) {
+    const s3Path = this.transformBreadcrumbsToS3Path(breadcrumbs);
+    
+    if (!s3Path) {
+      // Fallback to root user folder if breadcrumbs are not available
+      throw new Error('Breadcrumbs are required for S3 path generation');
+    }
+    
+    return `${username}/${s3Path}/`;
+  }
+
+  // Legacy method for backward compatibility - deprecated
+  getS3PrefixLegacy(username, classNumber, module, subject = null, subSection = null) {
     const cleanClass = this.cleanClassNumber(classNumber);
     let prefix = `${username}/ClassSelector/Class${cleanClass}/${module}`;
     

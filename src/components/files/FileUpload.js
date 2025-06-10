@@ -16,7 +16,7 @@ const FileUpload = ({
   const [uploadProgress, setUploadProgress] = useState({});
   const [uploadResults, setUploadResults] = useState(null);
   const fileInputRef = useRef(null);
-  const { user } = useApp();
+  const { user, breadcrumbs } = useApp();
 
   const handleFileSelect = async (files) => {
     if (!files || files.length === 0) return;
@@ -79,10 +79,7 @@ const FileUpload = ({
         
         const s3Prefix = s3Service.getS3Prefix(
           username,
-          classNumber,
-          module,
-          subject,
-          subSection
+          breadcrumbs
         );
         
         const limitCheck = await s3Service.checkCategoryFileLimit(s3Prefix);
@@ -145,10 +142,7 @@ const FileUpload = ({
       const getS3KeyFunction = (filename) => {
         return s3Service.constructS3Key(
           username,
-          classNumber,
-          module,
-          subject,
-          subSection,
+          breadcrumbs,
           filename
         );
       };

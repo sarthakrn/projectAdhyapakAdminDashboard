@@ -6,16 +6,21 @@ import './EvaluationDashboard.css';
 
 const EvaluationDashboard = () => {
   const { classNumber, termId } = useParams();
-  const { updateBreadcrumbs, user } = useApp();
+  const { updateBreadcrumbs, user, breadcrumbs } = useApp();
   const navigate = useNavigate();
 
   const [questionPapers, setQuestionPapers] = useState({});
   const [totalMarks, setTotalMarks] = useState({});
+  const [savedMaximumMarks, setSavedMaximumMarks] = useState({}); // New state for saved marks
   const [evaluations] = useState({});
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [optedOutStudents, setOptedOutStudents] = useState(new Set());
+  const [uploadingMarkingScheme, setUploadingMarkingScheme] = useState({});
+  const [uploadingAnswerSheet, setUploadingAnswerSheet] = useState({});
+  const [answerSheetStatus, setAnswerSheetStatus] = useState({});
+  const [apiErrors, setApiErrors] = useState({}); // New state for API errors
 
   useEffect(() => {
     const cleanClassNumber = classNumber.replace('class-', '');
@@ -60,43 +65,183 @@ const EvaluationDashboard = () => {
     { id: 'social-science', name: 'Social Science', color: 'rgba(108, 117, 125, 0.8)' }
   ];
 
-  const handleQuestionPaperUpload = (subjectId, event) => {
+  // New function to handle saving maximum marks
+  const handleSaveMaximumMarks = (subjectId) => {
+    const value = totalMarks[subjectId];
+    
+    // Validate input
+    if (!value || isNaN(value) || parseFloat(value) <= 0) {
+      alert('Please enter a valid positive number for maximum marks.');
+      return;
+    }
+
+    const numericValue = parseFloat(value);
+    if (numericValue > 1000) {
+      alert('Maximum marks cannot exceed 1000.');
+      return;
+    }
+
+    // Round to 2 decimal places and convert to standard number to prevent backend Decimal issues
+    const roundedValue = Math.round(numericValue * 100) / 100;
+    const standardNumber = Number(roundedValue);
+
+    // Save to local state
+    setSavedMaximumMarks(prev => ({
+      ...prev,
+      [subjectId]: standardNumber
+    }));
+
+    // Clear any previous API errors for this subject
+    setApiErrors(prev => ({
+      ...prev,
+      [subjectId]: null
+    }));
+  };
+
+  // Modified function to handle marking scheme upload with maximum marks
+  const handleQuestionPaperUpload = async (subjectId, event) => {
     const file = event.target.files[0];
-    if (file) {
-      setQuestionPapers(prev => ({
+    if (!file) return;
+
+    // Validate file type
+    if (file.type !== 'application/pdf') {
+      alert('Please select a PDF file for the marking scheme.');
+      return;
+    }
+
+    // Check if maximum marks are saved
+    if (!savedMaximumMarks[subjectId]) {
+      alert('Please enter and save the maximum marks first.');
+      return;
+    }
+
+    setUploadingMarkingScheme(prev => ({ ...prev, [subjectId]: true }));
+    setApiErrors(prev => ({ ...prev, [subjectId]: null })); // Clear previous errors
+
+    try {
+      // Get usernames of all visible students (excluding opted out)
+      const visibleStudents = students.filter(student => !optedOutStudents.has(student.id));
+      const studentUsernames = visibleStudents.map(student => student.username);
+
+      if (studentUsernames.length === 0) {
+        alert('No students available for marking scheme upload.');
+        return;
+      }
+
+      const subjectName = subjects.find(s => s.id === subjectId)?.name;
+      if (!subjectName) {
+        throw new Error('Subject not found');
+      }
+
+      // Use the modified upload method that includes maximum marks
+      const result = await evaluationService.uploadMarkingSchemeWithMaxMarks(
+        file,
+        breadcrumbs,
+        subjectName,
+        studentUsernames,
+        savedMaximumMarks[subjectId], // Pass the saved maximum marks
+        user
+      );
+
+      if (result.success) {
+        setQuestionPapers(prev => ({
+          ...prev,
+          [subjectId]: file
+        }));
+        alert(`Marking scheme uploaded successfully for ${studentUsernames.length} students!`);
+      } else {
+        throw new Error(result.error || 'Upload failed');
+      }
+    } catch (error) {
+      console.error('Error uploading marking scheme:', error);
+      const errorMessage = `Failed to upload marking scheme: ${error.message}`;
+      
+      // Set error state for this subject
+      setApiErrors(prev => ({
         ...prev,
-        [subjectId]: file
+        [subjectId]: errorMessage
       }));
+    } finally {
+      setUploadingMarkingScheme(prev => ({ ...prev, [subjectId]: false }));
+      // Reset file input
+      event.target.value = '';
     }
   };
 
   const handleTotalMarksChange = (subjectId, value) => {
-    setTotalMarks(prev => ({
-      ...prev,
-      [subjectId]: value
-    }));
+    // Only allow numeric input with decimals, limited to 2 decimal places
+    if (value === '' || /^\d*\.?\d{0,2}$/.test(value)) {
+      setTotalMarks(prev => ({
+        ...prev,
+        [subjectId]: value
+      }));
+    }
   };
 
-  const handleStartEvaluation = (studentId, subjectId) => {
+  const handleStartEvaluation = async (studentId, subjectId) => {
     // Create a hidden file input and trigger it
     const fileInput = document.createElement('input');
     fileInput.type = 'file';
     fileInput.accept = '.pdf';
     fileInput.style.display = 'none';
     
-    fileInput.onchange = (event) => {
+    fileInput.onchange = async (event) => {
       const file = event.target.files[0];
-      if (file) {
-        // Check file size (20MB limit)
-        const maxSize = 20 * 1024 * 1024; // 20MB in bytes
-        if (file.size > maxSize) {
-          alert('File size exceeds 20MB limit. Please select a smaller file.');
-          return;
+      if (!file) return;
+
+      // Validate file type
+      if (file.type !== 'application/pdf') {
+        alert('Please select a PDF file for the answer sheet.');
+        return;
+      }
+
+      // Check file size (20MB limit)
+      const maxSize = 20 * 1024 * 1024; // 20MB in bytes
+      if (file.size > maxSize) {
+        alert('File size exceeds 20MB limit. Please select a smaller file.');
+        return;
+      }
+
+      const uploadKey = `${studentId}-${subjectId}`;
+      setUploadingAnswerSheet(prev => ({ ...prev, [uploadKey]: true }));
+
+      try {
+        const student = students.find(s => s.id === studentId);
+        if (!student) {
+          throw new Error('Student not found');
         }
-        
-        // TODO: Handle file upload processing here
-        console.log('Selected file:', file.name, 'Size:', (file.size / 1024 / 1024).toFixed(2) + 'MB');
-        alert(`File "${file.name}" selected successfully. Upload processing will be implemented.`);
+
+        const subjectName = subjects.find(s => s.id === subjectId)?.name;
+        if (!subjectName) {
+          throw new Error('Subject not found');
+        }
+
+        const result = await evaluationService.uploadAnswerSheet(
+          file,
+          breadcrumbs,
+          subjectName,
+          student.username,
+          user
+        );
+
+        if (result.success) {
+          setAnswerSheetStatus(prev => ({
+            ...prev,
+            [uploadKey]: {
+              uploaded: true,
+              fileName: file.name,
+              uploadTime: new Date().toISOString()
+            }
+          }));
+          alert(`Answer sheet uploaded successfully for ${student.firstName}!`);
+        } else {
+          throw new Error(result.error || 'Upload failed');
+        }
+      } catch (error) {
+        console.error('Error uploading answer sheet:', error);
+        alert(`Failed to upload answer sheet: ${error.message}`);
+      } finally {
+        setUploadingAnswerSheet(prev => ({ ...prev, [uploadKey]: false }));
       }
     };
     
@@ -106,12 +251,16 @@ const EvaluationDashboard = () => {
   };
 
   const isEvaluationEnabled = (subjectId) => {
-    return questionPapers[subjectId] && totalMarks[subjectId];
+    return questionPapers[subjectId] && savedMaximumMarks[subjectId]; // Updated to use savedMaximumMarks
+  };
+
+  const isUploadButtonEnabled = (subjectId) => {
+    return savedMaximumMarks[subjectId] && !uploadingMarkingScheme[subjectId];
   };
 
   const getEvaluationStatus = (studentId, subjectId) => {
     const key = `${studentId}-${subjectId}`;
-    return evaluations[key];
+    return evaluations[key] || answerSheetStatus[key];
   };
 
   const handleOptOut = (studentId) => {
@@ -125,9 +274,6 @@ const EvaluationDashboard = () => {
       return newSet;
     });
   };
-
-  const cleanClassNumber = classNumber.replace('class-', '');
-  const termName = `Term ${termId.replace('term', '')}`;
 
   // Render loading state
   if (loading) {
@@ -196,7 +342,7 @@ const EvaluationDashboard = () => {
       <div className="evaluation-instructions">
         <h3 className="instructions-title">Evaluation Process</h3>
         <ol className="instructions-list">
-          <li>Upload the Marking Scheme and set the Maximum Marks for each subject.</li>
+          <li>Set the Maximum Marks and click Save for each subject, then upload the Marking Scheme.</li>
           <li>For each student, click "Start Evaluation" to upload their answer sheet. The AI will then perform the initial grading.</li>
           <li>After AI evaluation, the teacher must review the results for each student, verify them, and submit the final grade.</li>
           <li>Once all evaluations are finalized, click the "AI Report" button to generate a comprehensive report, which will be published to students, create personalized practice questions, and update the school's knowledge graph.</li>
@@ -217,30 +363,71 @@ const EvaluationDashboard = () => {
                     <div className="subject-header-content">
                       <div className="subject-name">{subject.name}</div>
                       <div className="subject-controls">
+                        {/* Maximum Marks Control - Now positioned above upload */}
+                        <div className="marks-control">
+                          <div className="marks-input-wrapper">
+                            <input
+                              type="text"
+                              placeholder="Maximum Marks"
+                              value={totalMarks[subject.id] || ''}
+                              onChange={(e) => handleTotalMarksChange(subject.id, e.target.value)}
+                              className="marks-input"
+                              onKeyPress={(e) => {
+                                // Allow only numbers, decimal point, and control keys
+                                if (!/[\d.]/.test(e.key) && !['Backspace', 'Delete', 'Tab', 'Enter'].includes(e.key)) {
+                                  e.preventDefault();
+                                }
+                                // Allow Enter to save
+                                if (e.key === 'Enter') {
+                                  handleSaveMaximumMarks(subject.id);
+                                }
+                              }}
+                            />
+                            <button
+                              className={`save-marks-btn ${savedMaximumMarks[subject.id] ? 'saved' : ''}`}
+                              onClick={() => handleSaveMaximumMarks(subject.id)}
+                              disabled={!totalMarks[subject.id] || totalMarks[subject.id].trim() === ''}
+                              title={savedMaximumMarks[subject.id] ? `Saved: ${savedMaximumMarks[subject.id]} marks` : 'Save maximum marks'}
+                            >
+                              {savedMaximumMarks[subject.id] ? '✓' : '💾'}
+                            </button>
+                          </div>
+                          {savedMaximumMarks[subject.id] && (
+                            <div className="saved-marks-indicator">
+                              Saved: {savedMaximumMarks[subject.id]} marks
+                            </div>
+                          )}
+                        </div>
+                        
+                        {/* Upload Control - Now positioned below marks */}
                         <div className="upload-control">
                           <label className="upload-label">
                             <input
                               type="file"
-                              accept=".pdf,.doc,.docx"
+                              accept=".pdf"
                               onChange={(e) => handleQuestionPaperUpload(subject.id, e)}
                               className="upload-input"
+                              disabled={!isUploadButtonEnabled(subject.id)}
                             />
-                            <span className="upload-button">
-                              {questionPapers[subject.id] ? '✓ Uploaded' : '📄 Upload Marking Scheme'}
+                            <span 
+                              className={`upload-button ${!isUploadButtonEnabled(subject.id) ? 'disabled' : ''} ${uploadingMarkingScheme[subject.id] ? 'uploading' : ''}`}
+                              title={!savedMaximumMarks[subject.id] ? 'Please enter and save the maximum marks first' : ''}
+                            >
+                              {uploadingMarkingScheme[subject.id] 
+                                ? '⏳ Uploading...' 
+                                : questionPapers[subject.id] 
+                                ? '✓ Uploaded' 
+                                : '📄 Upload Marking Scheme'}
                             </span>
                           </label>
                         </div>
-                        <div className="marks-control">
-                          <input
-                            type="number"
-                            placeholder="Maximum Marks"
-                            value={totalMarks[subject.id] || ''}
-                            onChange={(e) => handleTotalMarksChange(subject.id, e.target.value)}
-                            className="marks-input"
-                            min="1"
-                            max="100"
-                          />
-                        </div>
+                        
+                        {/* Error Display */}
+                        {apiErrors[subject.id] && (
+                          <div className="error-message">
+                            {apiErrors[subject.id]}
+                          </div>
+                        )}
                       </div>
                     </div>
                   </th>
@@ -267,24 +454,34 @@ const EvaluationDashboard = () => {
                   {subjects.map(subject => {
                     const evaluationStatus = getEvaluationStatus(student.id, subject.id);
                     const isEnabled = isEvaluationEnabled(subject.id);
+                    const uploadKey = `${student.id}-${subject.id}`;
+                    const isUploading = uploadingAnswerSheet[uploadKey];
+                    const answerSheetUploaded = answerSheetStatus[uploadKey]?.uploaded;
                     
                     return (
                       <td key={subject.id} className="evaluation-cell">
-                        {evaluationStatus ? (
+                        {evaluationStatus && evaluationStatus.aiGrade ? (
                           <div className="evaluation-result">
                             <div className="grade-info">
                               <span className="ai-grade">AI: {evaluationStatus.aiGrade}</span>
                               <span className="teacher-grade">Teacher: {evaluationStatus.teacherGrade}</span>
                             </div>
                           </div>
+                        ) : answerSheetUploaded ? (
+                          <div className="answer-sheet-uploaded">
+                            <span className="upload-success">✓ Answer Sheet Uploaded</span>
+                            <small className="upload-time">
+                              {new Date(answerSheetStatus[uploadKey].uploadTime).toLocaleString()}
+                            </small>
+                          </div>
                         ) : (
                           <button
-                            className={`start-evaluation-btn ${!isEnabled ? 'disabled' : ''}`}
+                            className={`start-evaluation-btn ${!isEnabled || isUploading ? 'disabled' : ''}`}
                             onClick={() => handleStartEvaluation(student.id, subject.id)}
-                            disabled={!isEnabled}
-                            title={!isEnabled ? 'Upload marking scheme and set maximum marks first' : 'Start evaluation'}
+                            disabled={!isEnabled || isUploading}
+                            title={!isEnabled ? 'Upload marking scheme and set maximum marks first' : isUploading ? 'Uploading...' : 'Start evaluation'}
                           >
-                            Start Evaluation
+                            {isUploading ? '⏳ Uploading...' : 'Start Evaluation'}
                           </button>
                         )}
                       </td>

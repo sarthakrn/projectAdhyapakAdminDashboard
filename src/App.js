@@ -7,6 +7,7 @@ import Login from './components/auth/Login';
 import SessionExpiredModal from './components/common/SessionExpiredModal';
 import studentApiService from './services/studentApiService';
 import s3Service from './services/s3Service';
+import dynamoDbService from './services/dynamoDbService';
 
 import LandingPage from './components/dashboard/LandingPage';
 import ClassSelector from './components/dashboard/ClassSelector';
@@ -140,6 +141,7 @@ const AppContent = () => {
   useEffect(() => {
     studentApiService.setSessionExpiredCallback(handleSessionExpiry);
     s3Service.setSessionExpiredCallback(handleSessionExpiry);
+    dynamoDbService.setSessionExpiredCallback(handleSessionExpiry);
   }, [handleSessionExpiry]);
 
   return (

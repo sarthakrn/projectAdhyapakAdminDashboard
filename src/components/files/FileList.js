@@ -15,8 +15,8 @@ const FileList = ({
   const [error, setError] = useState(null);
   const [selectedFiles, setSelectedFiles] = useState(new Set());
   const [isDeleting, setIsDeleting] = useState(false);
-  const [deleteProgress, setDeleteProgress] = useState({});
-  const { user } = useApp();
+  const [deleteProgress, setDeleteProgress] = useState(0);
+  const { user, breadcrumbs } = useApp();
 
   const loadFiles = useCallback(async () => {
     // Debug: Log user object structure
@@ -55,10 +55,7 @@ const FileList = ({
       
       const s3Prefix = s3Service.getS3Prefix(
         username,
-        classNumber,
-        module,
-        subject,
-        subSection
+        breadcrumbs
       );
 
       const result = await s3Service.listFiles(s3Prefix);
@@ -74,11 +71,11 @@ const FileList = ({
     } finally {
       setLoading(false);
     }
-  }, [user, classNumber, module, subject, subSection]);
+  }, [user, breadcrumbs]);
 
   useEffect(() => {
     loadFiles();
-  }, [classNumber, module, subject, subSection, refreshTrigger, loadFiles]);
+  }, [refreshTrigger, loadFiles]);
 
   const handleFileSelect = (fileKey, isSelected) => {
     const newSelection = new Set(selectedFiles);
