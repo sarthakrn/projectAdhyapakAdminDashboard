@@ -475,24 +475,68 @@ class EvaluationService {
   }
 
   // Get student evaluation metadata (placeholder for future API implementation)
-  async getStudentEvaluationData(studentUsername, breadcrumbs, subjectName, user) {
+  async getStudentEvaluationData(studentUsername, termName, subjectName, user) {
     try {
-      // Note: This functionality would need a corresponding API endpoint
-      // For now, return a placeholder response
-      console.warn('getStudentEvaluationData: API endpoint not yet implemented');
+      const evaluationApiService = await this.getEvaluationApiService();
       
+      // Get student data from API
+      const result = await evaluationApiService.getStudentData(studentUsername, user);
+      
+      if (!result.success) {
+        return {
+          success: false,
+          error: result.error || 'Failed to get student data'
+        };
+      }
+
+      // Extract the class from breadcrumbs or user context
+      const classNumber = this.extractClassFromContext(user);
+      const normalizedTermName = termName.replace(/\s+/g, '').replace(/[^a-zA-Z0-9]/g, '');
+      
+      // Navigate to the evaluation data path
+      const evaluationPath = `personalized_info.${classNumber}.${normalizedTermName}.${subjectName}`;
+      const evaluationData = this.getNestedProperty(result.data, evaluationPath);
+      
+      if (!evaluationData) {
+        return {
+          maximum_marks: 0,
+          marking_scheme_s3_path: ''
+        };
+      }
+
       return {
-        success: false,
-        error: 'This functionality requires an API endpoint implementation'
+        maximum_marks: evaluationData.marks_metadata?.maximum_marks?.value || 0,
+        marking_scheme_s3_path: evaluationData.marking_scheme_metadata?.marking_scheme_s3_path || ''
       };
 
     } catch (error) {
       console.error('Error getting student evaluation data:', error);
       return {
-        success: false,
-        error: error.message || 'Failed to get evaluation data'
+        maximum_marks: 0,
+        marking_scheme_s3_path: ''
       };
     }
+  }
+
+  // Helper method to extract class from user context
+  extractClassFromContext(user) {
+    // Try to extract from current URL or context
+    if (typeof window !== 'undefined' && window.location) {
+      const pathMatch = window.location.pathname.match(/class-(\d+)/);
+      if (pathMatch) {
+        return `CLASS${pathMatch[1]}`;
+      }
+    }
+    
+    // Fallback to a default or extract from user data
+    return 'CLASS9'; // Default fallback
+  }
+
+  // Helper method to get nested property from object
+  getNestedProperty(obj, path) {
+    return path.split('.').reduce((current, key) => {
+      return current && current[key] !== undefined ? current[key] : undefined;
+    }, obj);
   }
 
   // Export evaluation data (for future use)

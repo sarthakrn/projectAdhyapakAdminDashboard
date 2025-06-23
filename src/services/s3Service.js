@@ -544,6 +544,44 @@ class S3Service {
     }
   }
 
+  // Check if file exists in S3
+  async checkFileExists(s3Key) {
+    try {
+      const s3Client = this.getS3Client();
+      
+      const params = {
+        Bucket: this.bucketName,
+        Key: s3Key,
+      };
+
+      const command = new GetObjectCommand(params);
+      await s3Client.send(command);
+      
+      console.log('✅ File exists at:', s3Key);
+      return {
+        success: true,
+        exists: true,
+        message: "File exists"
+      };
+    } catch (error) {
+      if (error.name === 'NoSuchKey' || error.$metadata?.httpStatusCode === 404) {
+        console.log('📭 File does not exist at:', s3Key);
+        return {
+          success: true,
+          exists: false,
+          message: "File does not exist"
+        };
+      }
+      
+      console.error("Error checking file existence:", error);
+      return {
+        success: false,
+        exists: false,
+        error: error.message || "Failed to check file existence"
+      };
+    }
+  }
+
   // Delete file from S3
   async deleteFile(s3Key) {
     try {

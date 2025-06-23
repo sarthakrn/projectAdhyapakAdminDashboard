@@ -286,6 +286,62 @@ class EvaluationApiService {
       };
     }
   }
+
+  // Get individual student data
+  async getStudentData(studentUsername, user) {
+    try {
+      if (!user || !user.id_token) {
+        throw new Error('User authentication is required');
+      }
+
+      if (!studentUsername) {
+        throw new Error('Student username is required');
+      }
+
+      // Extract school code from admin user
+      const schoolCode = this.extractSchoolCode(user);
+
+      console.log('📤 Getting student data via API:', {
+        endpoint: `${this.baseUrl}/students/get`,
+        studentUsername,
+        schoolCode
+      });
+
+      const response = await fetch(`${this.baseUrl}/students/get`, {
+        method: 'POST',
+        headers: this.getAuthHeaders(user.id_token),
+        body: JSON.stringify({
+          username: studentUsername,
+          schoolCode: schoolCode
+        })
+      });
+
+      if (!response.ok) {
+        if (response.status === 401 || response.status === 403) {
+          if (this.sessionExpiredCallback) {
+            this.sessionExpiredCallback();
+          }
+          throw new Error('Authentication failed. Please log in again.');
+        }
+        throw new Error(`API request failed with status ${response.status}`);
+      }
+
+      const result = await response.json();
+      console.log('✅ Student data retrieved successfully');
+
+      return {
+        success: true,
+        data: result
+      };
+
+    } catch (error) {
+      console.error('❌ Error getting student data:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to get student data'
+      };
+    }
+  }
 }
 
 // Export singleton instance

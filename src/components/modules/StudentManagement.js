@@ -175,10 +175,21 @@ const StudentManagement = () => {
     return dateStr;
   };
 
+  /**
+   * Date Format Conversion Strategy:
+   * 
+   * The system has different date format requirements at different stages:
+   * 1. HTML date input provides: YYYY-MM-DD
+   * 2. Internal validation expects: DD-MM-YYYY
+   * 3. Backend API expects: YYYY-MM-DD
+   * 
+   * Flow: HTML Input (YYYY-MM-DD) -> Validation (DD-MM-YYYY) -> API (YYYY-MM-DD)
+   */
+
   const convertDateFromEdit = (dateStr) => {
     if (!dateStr) return '';
     
-    // Convert YYYY-MM-DD to DD-MM-YYYY
+    // Convert YYYY-MM-DD to DD-MM-YYYY for validation
     if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
       const [year, month, day] = dateStr.split('-');
       return `${day}-${month}-${year}`;
@@ -187,10 +198,40 @@ const StudentManagement = () => {
     return dateStr;
   };
 
+  const convertDateForAPI = (dateStr) => {
+    if (!dateStr) return '';
+    
+    // Convert DD-MM-YYYY back to YYYY-MM-DD for API
+    if (/^\d{2}-\d{2}-\d{4}$/.test(dateStr)) {
+      const [day, month, year] = dateStr.split('-');
+      return `${year}-${month}-${day}`;
+    }
+    
+    return dateStr;
+  };
+
+  // Convert date from DD-MM-YYYY to YYYY-MM-DD format for bulk CSV operations
+  const convertDateForBulkAPI = (dateStr) => {
+    if (!dateStr) return '';
+    
+    console.log('🔄 convertDateForBulkAPI called with:', dateStr);
+    
+    // Convert DD-MM-YYYY to YYYY-MM-DD for API
+    if (/^\d{2}-\d{2}-\d{4}$/.test(dateStr)) {
+      const [day, month, year] = dateStr.split('-');
+      const converted = `${year}-${month}-${day}`;
+      console.log('✅ Bulk date converted:', dateStr, '->', converted);
+      return converted;
+    }
+    
+    console.log('❌ Bulk date format not recognized, returning as-is:', dateStr);
+    return dateStr;
+  };
+
   const handleSaveEdit = async () => {
     if (!editingStudent) return;
 
-    // Convert date format for validation and API
+    // Convert date format for validation (YYYY-MM-DD to DD-MM-YYYY)
     const studentToValidate = {
       ...editingStudent,
       dateOfBirth: convertDateFromEdit(editingStudent.dateOfBirth)
@@ -202,10 +243,16 @@ const StudentManagement = () => {
       return;
     }
 
+    // Convert date for API (DD-MM-YYYY to YYYY-MM-DD)
+    const studentDataForAPI = {
+      ...editingStudent,
+      dateOfBirth: convertDateForAPI(studentToValidate.dateOfBirth)
+    };
+
     setLoading(true);
     try {
-      console.log('Updating student:', studentToValidate);
-      const result = await studentApiService.updateStudents(studentToValidate, user);
+      console.log('Updating student:', studentDataForAPI);
+      const result = await studentApiService.updateStudents(studentDataForAPI, user);
       console.log('Update result:', result);
       
       if (result.success) {
@@ -405,8 +452,33 @@ const StudentManagement = () => {
 
     setLoading(true);
     try {
+      // Debug: Log original students before conversion
+      console.log('🔍 CSV DEBUG: Original students before date conversion:', selectedStudentsData.map(s => ({
+        name: `${s.firstName} ${s.lastName}`,
+        originalDate: s.dateOfBirth
+      })));
+
+      // Convert date format for all students before sending to API
+      const studentsWithConvertedDates = selectedStudentsData.map(student => {
+        const originalDate = student.dateOfBirth;
+        const convertedDate = convertDateForBulkAPI(student.dateOfBirth);
+        
+        console.log(`🔄 CSV Converting date for ${student.firstName} ${student.lastName}: "${originalDate}" -> "${convertedDate}"`);
+        
+        return {
+          ...student,
+          dateOfBirth: convertedDate
+        };
+      });
+
+      // Debug: Log final converted students
+      console.log('✅ CSV DEBUG: Final students with converted dates:', studentsWithConvertedDates.map(s => ({
+        name: `${s.firstName} ${s.lastName}`,
+        convertedDate: s.dateOfBirth
+      })));
+
       const cleanClassNumber = classNumber.replace('class-', '');
-      const result = await studentApiService.createStudents(selectedStudentsData, user, cleanClassNumber);
+      const result = await studentApiService.createStudents(studentsWithConvertedDates, user, cleanClassNumber);
       
       if (result.success) {
         if (result.isFireAndForget) {
@@ -456,22 +528,28 @@ const StudentManagement = () => {
       return;
     }
 
-    // Convert date from YYYY-MM-DD to DD-MM-YYYY
-    const studentData = {
+    // Convert date for validation (YYYY-MM-DD to DD-MM-YYYY)
+    const studentDataForValidation = {
       ...singleStudentForm,
       dateOfBirth: convertDateFromEdit(singleStudentForm.dateOfBirth)
     };
 
-    const validation = studentApiService.validateStudentData(studentData);
+    const validation = studentApiService.validateStudentData(studentDataForValidation);
     if (!validation.isValid) {
       alert(`Validation errors:\n${validation.errors.join('\n')}`);
       return;
     }
 
+    // Convert date for API (DD-MM-YYYY to YYYY-MM-DD)
+    const studentDataForAPI = {
+      ...singleStudentForm,
+      dateOfBirth: convertDateForAPI(studentDataForValidation.dateOfBirth)
+    };
+
     setLoading(true);
     try {
       const cleanClassNumber = classNumber.replace('class-', '');
-      const result = await studentApiService.createStudents(studentData, user, cleanClassNumber);
+      const result = await studentApiService.createStudents(studentDataForAPI, user, cleanClassNumber);
       
       if (result.success) {
         if (result.isFireAndForget) {

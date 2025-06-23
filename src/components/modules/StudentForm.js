@@ -169,6 +169,33 @@ const StudentForm = () => {
     setSelectAll(false);
   };
 
+  /**
+   * Bulk Create Date Format Conversion Strategy:
+   * 
+   * For bulk operations, dates follow this flow:
+   * 1. CSV/Manual Entry: DD-MM-YYYY (validated format)
+   * 2. Internal Storage: DD-MM-YYYY (after validation)
+   * 3. API Requirement: YYYY-MM-DD (backend expectation)
+   * 
+   * This function converts from DD-MM-YYYY to YYYY-MM-DD before API calls.
+   */
+  const convertDateForAPI = (dateStr) => {
+    if (!dateStr) return '';
+    
+    console.log('🔄 convertDateForAPI called with:', dateStr);
+    
+    // Convert DD-MM-YYYY to YYYY-MM-DD for API
+    if (/^\d{2}-\d{2}-\d{4}$/.test(dateStr)) {
+      const [day, month, year] = dateStr.split('-');
+      const converted = `${year}-${month}-${day}`;
+      console.log('✅ Date converted:', dateStr, '->', converted);
+      return converted;
+    }
+    
+    console.log('❌ Date format not recognized, returning as-is:', dateStr);
+    return dateStr;
+  };
+
   const handleBulkCreate = async () => {
     if (students.length === 0) {
       showError('Please add students to create.');
@@ -211,10 +238,36 @@ const StudentForm = () => {
     clearMessages();
     
     try {
-      console.log('Creating students:', studentsToCreate);
+      // Debug: Log original students before conversion
+      console.log('🔍 DEBUG: Original students before date conversion:', studentsToCreate.map(s => ({
+        name: `${s.firstName} ${s.lastName}`,
+        originalDate: s.dateOfBirth
+      })));
+      
+      // Convert date format for all students before sending to API
+      const studentsWithConvertedDates = studentsToCreate.map(student => {
+        const originalDate = student.dateOfBirth;
+        const convertedDate = convertDateForAPI(student.dateOfBirth);
+        
+        // Debug: Log each conversion
+        console.log(`🔄 Converting date for ${student.firstName} ${student.lastName}: "${originalDate}" -> "${convertedDate}"`);
+        
+        return {
+          ...student,
+          dateOfBirth: convertedDate
+        };
+      });
+      
+      // Debug: Log final converted students
+      console.log('✅ DEBUG: Final students with converted dates:', studentsWithConvertedDates.map(s => ({
+        name: `${s.firstName} ${s.lastName}`,
+        convertedDate: s.dateOfBirth
+      })));
+      
+      console.log('🚀 Final payload being sent to API:', studentsWithConvertedDates);
       console.log('User object:', user);
       
-      const result = await studentApiService.createStudents(studentsToCreate, user);
+      const result = await studentApiService.createStudents(studentsWithConvertedDates, user);
       console.log('Create result:', result);
       
       if (result.success) {
