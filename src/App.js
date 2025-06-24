@@ -8,6 +8,7 @@ import SessionExpiredModal from './components/common/SessionExpiredModal';
 import studentApiService from './services/studentApiService';
 import s3Service from './services/s3Service';
 import dynamoDbService from './services/dynamoDbService';
+import pdfGradingApiService from './services/pdfGradingApiService';
 
 import LandingPage from './components/dashboard/LandingPage';
 import ClassSelector from './components/dashboard/ClassSelector';
@@ -21,6 +22,7 @@ import TermSelection from './components/evaluation/pages/TermSelection';
 import EvaluationLanding from './components/evaluation/pages/EvaluationLanding';
 import EvaluationTermSelection from './components/evaluation/pages/EvaluationTermSelection';
 import EvaluationDashboard from './components/evaluation/pages/EvaluationDashboard';
+import GradingResults from './components/evaluation/pages/GradingResults';
 import AnswerSheetSubmission from './components/evaluation/pages/AnswerSheetSubmission';
 import TeacherSetup from './components/evaluation/pages/TeacherSetup';
 import StudentList from './components/evaluation/pages/StudentList';
@@ -142,6 +144,7 @@ const AppContent = () => {
     studentApiService.setSessionExpiredCallback(handleSessionExpiry);
     s3Service.setSessionExpiredCallback(handleSessionExpiry);
     dynamoDbService.setSessionExpiredCallback(handleSessionExpiry);
+    pdfGradingApiService.setSessionExpiredCallback(handleSessionExpiry);
   }, [handleSessionExpiry]);
 
   return (
@@ -181,6 +184,12 @@ const AppContent = () => {
         <Route path="/evaluation/:classNumber/:termId" element={
           <ProtectedRoute>
             <EvaluationDashboard />
+          </ProtectedRoute>
+        } />
+        
+        <Route path="/evaluation/:classNumber/:termId/student/:studentId/subject/:subjectId/grading-results" element={
+          <ProtectedRoute>
+            <GradingResults />
           </ProtectedRoute>
         } />
         

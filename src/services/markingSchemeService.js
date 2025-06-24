@@ -53,7 +53,6 @@ class MarkingSchemeService {
   formatSubjectForS3(subjectName) {
     // Convert subject names to consistent format for S3
     const subjectMap = {
-      'hindi': 'HINDI',
       'english': 'ENGLISH', 
       'mathematics': 'MATHEMATICS',
       'science': 'SCIENCE',

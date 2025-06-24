@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useApp } from '../../../context/AppContext';
 import evaluationService from '../../../services/evaluationService';
 import markingSchemeService from '../../../services/markingSchemeService';
+import pdfGradingApiService from '../../../services/pdfGradingApiService';
 import './EvaluationDashboard.css';
 
 const EvaluationDashboard = () => {
@@ -39,9 +40,16 @@ const EvaluationDashboard = () => {
   // Toast notification state
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
 
+  // PDF Grading state
+  const [pdfGradingModal, setPdfGradingModal] = useState(false);
+  const [currentStudent, setCurrentStudent] = useState(null);
+  const [currentSubject, setCurrentSubject] = useState(null);
+  const [answerSheetFile, setAnswerSheetFile] = useState(null);
+  const [gradingInProgress, setGradingInProgress] = useState(false);
+  const [gradingError, setGradingError] = useState('');
+
   // Subject configuration - hardcoded as per requirements
   const subjects = useMemo(() => [
-    { id: 'hindi', name: 'Hindi', color: 'rgba(220, 53, 69, 0.8)' },
     { id: 'english', name: 'English', color: 'rgba(0, 123, 255, 0.8)' },
     { id: 'mathematics', name: 'Mathematics', color: 'rgba(40, 167, 69, 0.8)' },
     { id: 'social-science', name: 'Social Science', color: 'rgba(253, 126, 20, 0.8)' },
@@ -421,9 +429,167 @@ const EvaluationDashboard = () => {
     }
   };
 
-  // Handle start evaluation (placeholder)
-  const handleStartEvaluation = (student, subject) => {
-    console.log(`Start Evaluation clicked for ${student.name} in ${subject.name}`);
+  // Handle evaluation button click - implement PDF grading flow
+  const handleStartEvaluation = async (student, subject) => {
+    try {
+      // Check grading status first
+      const statusResult = await pdfGradingApiService.checkGradingStatus(
+        student.username,
+        schoolCode,
+        classNumber,
+        termId,
+        subject.id,
+        user
+      );
+
+      if (!statusResult.success) {
+        showToast(`Error checking grading status: ${statusResult.error}`, 'error');
+        return;
+      }
+
+      const status = statusResult.data.status;
+
+      switch (status) {
+        case 'COMPLETED':
+          // Open results in new tab/page
+          navigate(`/evaluation/${classNumber}/${termId}/student/${student.username}/subject/${subject.id}/grading-results`, {
+            state: {
+              gradingData: statusResult.data,
+              studentName: student.name
+            }
+          });
+          break;
+
+        case 'IN_PROGRESS':
+          showToast('Evaluation is in progress. Please check again later.', 'info');
+          break;
+
+        case 'ERROR':
+          // Show try again option
+          const tryAgain = window.confirm('The previous evaluation failed. Would you like to try again?');
+          if (tryAgain) {
+            openFileUploadModal(student, subject);
+          }
+          break;
+
+        case 'NOT_STARTED':
+        default:
+          // Open file upload modal
+          openFileUploadModal(student, subject);
+          break;
+      }
+    } catch (error) {
+      console.error('Error in handleStartEvaluation:', error);
+      showToast(`Error: ${error.message}`, 'error');
+    }
+  };
+
+  // Open file upload modal for answer sheet
+  const openFileUploadModal = (student, subject) => {
+    setCurrentStudent(student);
+    setCurrentSubject(subject);
+    setPdfGradingModal(true);
+    setAnswerSheetFile(null);
+    setGradingError('');
+  };
+
+  // Handle file selection for answer sheet
+  const handleAnswerSheetFileSelect = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      // Validate file type
+      if (file.type !== 'application/pdf') {
+        setGradingError('Please select a PDF file');
+        setAnswerSheetFile(null);
+        return;
+      }
+      
+      // Validate file size (max 10MB)
+      if (file.size > 10 * 1024 * 1024) {
+        setGradingError('File size must be less than 10MB');
+        setAnswerSheetFile(null);
+        return;
+      }
+
+      setAnswerSheetFile(file);
+      setGradingError('');
+    }
+  };
+
+  // Handle PDF grading submission
+  const handleGradingSubmission = async () => {
+    if (!answerSheetFile || !currentStudent || !currentSubject) {
+      setGradingError('Please select a PDF file');
+      return;
+    }
+
+    setGradingInProgress(true);
+    setGradingError('');
+
+    try {
+      // Step 1: Upload answer sheet to S3
+      showToast('Uploading answer sheet...', 'info');
+      
+      const uploadResult = await pdfGradingApiService.uploadAnswerSheet(
+        answerSheetFile,
+        schoolCode,
+        classNumber,
+        termId,
+        currentSubject.id,
+        currentStudent.username,
+        user
+      );
+
+      if (!uploadResult.success) {
+        throw new Error(uploadResult.error || 'Failed to upload answer sheet');
+      }
+
+      // Step 2: Generate marking scheme path
+      const markingSchemeS3Path = pdfGradingApiService.generateMarkingSchemeS3Path(
+        schoolCode,
+        classNumber,
+        termId,
+        currentSubject.id
+      );
+
+      // Step 3: Initiate grading
+      showToast('Starting AI grading process...', 'info');
+      
+      const gradingResult = await pdfGradingApiService.initiateGrading(
+        currentStudent.username,
+        schoolCode,
+        classNumber,
+        termId,
+        currentSubject.id,
+        markingSchemeS3Path,
+        uploadResult.s3Path,
+        user
+      );
+
+      if (!gradingResult.success) {
+        throw new Error(gradingResult.error || 'Failed to initiate grading');
+      }
+
+      // Success - close modal and show success message
+      closePdfGradingModal();
+      showToast('Evaluation has started. Please check back in a few minutes.', 'success');
+
+    } catch (error) {
+      console.error('Error in grading submission:', error);
+      setGradingError(error.message);
+    } finally {
+      setGradingInProgress(false);
+    }
+  };
+
+  // Close PDF grading modal
+  const closePdfGradingModal = () => {
+    setPdfGradingModal(false);
+    setCurrentStudent(null);
+    setCurrentSubject(null);
+    setAnswerSheetFile(null);
+    setGradingInProgress(false);
+    setGradingError('');
   };
 
   // Close upload modal
@@ -555,7 +721,7 @@ const EvaluationDashboard = () => {
                       disabled={!markingSchemeStatus[subject.id]?.exists}
                       onClick={() => handleStartEvaluation(student, subject)}
                     >
-                      Start Evaluation
+                      Evaluation
                     </button>
                   </td>
                 ))}
@@ -713,6 +879,164 @@ const EvaluationDashboard = () => {
                 disabled={!resetFile || resetting}
               >
                 {resetting ? 'Replacing...' : 'Replace'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* PDF Grading Modal */}
+      {pdfGradingModal && (
+        <div className="modal-overlay" onClick={closePdfGradingModal}>
+          <div className="modal-content" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>Upload Answer Sheet for Grading</h3>
+              <div className="modal-subtitle">
+                <span className="student-name">{currentStudent?.name}</span>
+                <span className="subject-name">{currentSubject?.name}</span>
+              </div>
+              <button className="modal-close" onClick={closePdfGradingModal}>×</button>
+            </div>
+
+            <div className="modal-body">
+              {gradingError && (
+                <div className="error-message">{gradingError}</div>
+              )}
+
+              <div className="upload-instructions">
+                <p>Please upload the student's answer sheet PDF for AI grading.</p>
+                <ul>
+                  <li>File must be in PDF format</li>
+                  <li>Maximum file size: 10MB</li>
+                  <li>Ensure the answer sheet is clearly visible</li>
+                </ul>
+              </div>
+
+              <div className="file-input-container">
+                <input
+                  type="file"
+                  id="answerSheetFile"
+                  accept=".pdf"
+                  onChange={handleAnswerSheetFileSelect}
+                  disabled={gradingInProgress}
+                />
+                <label htmlFor="answerSheetFile" className="file-input-label">
+                  {answerSheetFile ? answerSheetFile.name : 'Choose PDF file...'}
+                </label>
+              </div>
+
+              {answerSheetFile && (
+                <div className="file-info">
+                  <span className="file-name">📄 {answerSheetFile.name}</span>
+                  <span className="file-size">({(answerSheetFile.size / 1024 / 1024).toFixed(2)} MB)</span>
+                </div>
+              )}
+
+              {gradingInProgress && (
+                <div className="progress-section">
+                  <div className="progress-text">
+                    <span>Processing...</span>
+                  </div>
+                  <div className="progress-bar">
+                    <div className="progress-bar-fill"></div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="modal-footer">
+              <button 
+                className="btn btn-cancel"
+                onClick={closePdfGradingModal}
+                disabled={gradingInProgress}
+              >
+                Cancel
+              </button>
+              <button 
+                className="btn btn-primary" 
+                onClick={handleGradingSubmission}
+                disabled={!answerSheetFile || gradingInProgress}
+              >
+                {gradingInProgress ? 'Processing...' : 'Start Grading'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* PDF Grading Modal */}
+      {pdfGradingModal && (
+        <div className="modal-overlay" onClick={closePdfGradingModal}>
+          <div className="modal-content" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>Upload Answer Sheet for Grading</h3>
+              <div className="modal-subtitle">
+                <span className="student-name">{currentStudent?.name}</span>
+                <span className="subject-name">{currentSubject?.name}</span>
+              </div>
+              <button className="modal-close" onClick={closePdfGradingModal}>×</button>
+            </div>
+
+            <div className="modal-body">
+              {gradingError && (
+                <div className="error-message">{gradingError}</div>
+              )}
+
+              <div className="upload-instructions">
+                <p>Please upload the student's answer sheet PDF for AI grading.</p>
+                <ul>
+                  <li>File must be in PDF format</li>
+                  <li>Maximum file size: 10MB</li>
+                  <li>Ensure the answer sheet is clearly visible</li>
+                </ul>
+              </div>
+
+              <div className="file-input-container">
+                <input
+                  type="file"
+                  id="answerSheetFile"
+                  accept=".pdf"
+                  onChange={handleAnswerSheetFileSelect}
+                  disabled={gradingInProgress}
+                />
+                <label htmlFor="answerSheetFile" className="file-input-label">
+                  {answerSheetFile ? answerSheetFile.name : 'Choose PDF file...'}
+                </label>
+              </div>
+
+              {answerSheetFile && (
+                <div className="file-info">
+                  <span className="file-name">📄 {answerSheetFile.name}</span>
+                  <span className="file-size">({(answerSheetFile.size / 1024 / 1024).toFixed(2)} MB)</span>
+                </div>
+              )}
+
+              {gradingInProgress && (
+                <div className="progress-section">
+                  <div className="progress-text">
+                    <span>Processing...</span>
+                  </div>
+                  <div className="progress-bar">
+                    <div className="progress-bar-fill"></div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="modal-footer">
+              <button 
+                className="btn btn-cancel"
+                onClick={closePdfGradingModal}
+                disabled={gradingInProgress}
+              >
+                Cancel
+              </button>
+              <button 
+                className="btn btn-primary" 
+                onClick={handleGradingSubmission}
+                disabled={!answerSheetFile || gradingInProgress}
+              >
+                {gradingInProgress ? 'Processing...' : 'Start Grading'}
               </button>
             </div>
           </div>

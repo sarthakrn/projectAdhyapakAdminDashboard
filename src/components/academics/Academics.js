@@ -41,13 +41,6 @@ const Academics = () => {
       description: 'Language, literature, grammar, and communication skills',
       icon: '📖',
       color: 'rgba(220, 53, 69, 0.8)'
-    },
-    {
-      id: 'hindi',
-      name: 'Hindi',
-      description: 'Hindi language, literature, and communication',
-      icon: '🇮🇳',
-      color: 'rgba(111, 66, 193, 0.8)'
     }
   ];
 

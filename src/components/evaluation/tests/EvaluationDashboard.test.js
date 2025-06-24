@@ -104,7 +104,7 @@ describe('EvaluationDashboard', () => {
     
     mockEvaluationService.getS3Service.mockResolvedValue(mockS3Service);
     mockEvaluationService.getEvaluationApiService.mockResolvedValue(mockEvaluationApiService);
-    mockEvaluationService.generateEvaluationS3Path.mockReturnValue('Evaluation/Class9/Term1/Hindi/MarkingScheme');
+    mockEvaluationService.generateEvaluationS3Path.mockReturnValue('Evaluation/Class9/Term1/English/MarkingScheme');
     mockEvaluationService.getStudentEvaluationData.mockResolvedValue({
       maximum_marks: 0,
       marking_scheme_s3_path: ''
@@ -140,7 +140,6 @@ describe('EvaluationDashboard', () => {
     renderWithProviders(<EvaluationDashboard />);
     
     await waitFor(() => {
-      expect(screen.getByText('Hindi')).toBeInTheDocument();
       expect(screen.getByText('English')).toBeInTheDocument();
       expect(screen.getByText('Mathematics')).toBeInTheDocument();
       expect(screen.getByText('Science')).toBeInTheDocument();
@@ -165,7 +164,7 @@ describe('EvaluationDashboard', () => {
       fireEvent.click(setupButton);
     });
     
-    expect(screen.getByText('Setup Evaluation - Hindi')).toBeInTheDocument();
+    expect(screen.getByText('Setup Evaluation - English')).toBeInTheDocument();
     expect(screen.getByLabelText('Maximum Marks *')).toBeInTheDocument();
     expect(screen.getByLabelText('Upload Marking Scheme (PDF) *')).toBeInTheDocument();
   });
@@ -276,13 +275,13 @@ describe('EvaluationDashboard', () => {
       fireEvent.click(setupButton);
     });
     
-    expect(screen.getByText('Setup Evaluation - Hindi')).toBeInTheDocument();
+    expect(screen.getByText('Setup Evaluation - English')).toBeInTheDocument();
     
     const cancelButton = screen.getByText('Cancel');
     fireEvent.click(cancelButton);
     
     await waitFor(() => {
-      expect(screen.queryByText('Setup Evaluation - Hindi')).not.toBeInTheDocument();
+      expect(screen.queryByText('Setup Evaluation - English')).not.toBeInTheDocument();
     });
   });
 

@@ -874,3 +874,172 @@
     border: 1px solid #ccc;
   }
 }
+
+/* PDF Grading Modal Styles */
+.modal-subtitle {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-top: 0.5rem;
+  font-size: 0.9rem;
+  opacity: 0.8;
+}
+
+.modal-subtitle .student-name {
+  font-weight: 600;
+  color: #007bff;
+}
+
+.modal-subtitle .subject-name {
+  font-weight: 500;
+  color: #6c757d;
+}
+
+.upload-instructions {
+  background: rgba(0, 123, 255, 0.1);
+  border: 1px solid rgba(0, 123, 255, 0.2);
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.upload-instructions p {
+  margin: 0 0 0.75rem 0;
+  font-weight: 500;
+  color: #495057;
+}
+
+.upload-instructions ul {
+  margin: 0;
+  padding-left: 1.25rem;
+  list-style-type: disc;
+}
+
+.upload-instructions li {
+  margin-bottom: 0.25rem;
+  color: #6c757d;
+  font-size: 0.9rem;
+}
+
+.file-input-container {
+  position: relative;
+  margin-bottom: 1rem;
+}
+
+.file-input-container input[type="file"] {
+  position: absolute;
+  opacity: 0;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+}
+
+.file-input-label {
+  display: block;
+  padding: 0.75rem 1rem;
+  background: #f8f9fa;
+  border: 2px dashed #dee2e6;
+  border-radius: 8px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: 500;
+  color: #6c757d;
+}
+
+.file-input-label:hover {
+  background: #e9ecef;
+  border-color: #007bff;
+  color: #007bff;
+}
+
+.file-input-container input:focus + .file-input-label {
+  outline: 2px solid #007bff;
+  outline-offset: 2px;
+}
+
+.file-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  background: rgba(40, 167, 69, 0.1);
+  border: 1px solid rgba(40, 167, 69, 0.2);
+  border-radius: 6px;
+  margin-bottom: 1rem;
+}
+
+.file-info .file-name {
+  font-weight: 500;
+  color: #28a745;
+}
+
+.file-info .file-size {
+  color: #6c757d;
+  font-size: 0.9rem;
+}
+
+.progress-section {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: rgba(0, 123, 255, 0.05);
+  border-radius: 8px;
+  border-left: 4px solid #007bff;
+}
+
+.progress-text {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 0.75rem;
+  font-weight: 500;
+  color: #007bff;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 6px;
+  background: #e9ecef;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #007bff, #0056b3);
+  border-radius: 3px;
+  animation: progressAnimation 2s ease-in-out infinite;
+}
+
+@keyframes progressAnimation {
+  0% { width: 0%; }
+  50% { width: 100%; }
+  100% { width: 0%; }
+}
+
+/* PDF Grading Modal Responsive Styles */
+@media (max-width: 768px) {
+  .upload-instructions {
+    padding: 0.75rem;
+  }
+  
+  .file-input-label {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.9rem;
+  }
+  
+  .modal-subtitle {
+    text-align: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .upload-instructions ul {
+    padding-left: 1rem;
+  }
+  
+  .file-info {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+  }
+}
